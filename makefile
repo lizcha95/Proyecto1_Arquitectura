@@ -1,7 +1,7 @@
 #******************************************
 # File: makefile
 # Author: Elberth Adrian Garro Sanchez [2014088081]
-# Utility: simple makefile for test
+# Utility: simple makefile for analyzer
 #******************************************
 
 #program to use as the assembler
@@ -11,8 +11,8 @@ ASM_F=-f elf64
 #program to use as linker
 LINKER=ld
 #link executable
-test: test.o
-	$(LINKER) -o test test.o
+analyzer: analyzer.o
+	$(LINKER) -o analyzer analyzer.o
 #assemble source code
-test.o: test.asm
-	$(ASM) $(ASM_F) -o test.o test.asm
+analyzer.o: analyzer.asm
+	$(ASM) $(ASM_F) -o analyzer.o analyzer.asm
