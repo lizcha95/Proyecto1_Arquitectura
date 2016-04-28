@@ -16,9 +16,9 @@
 	push rsi
 	push rdx
 	;; sys_write syscall
-	mov rax, SYS_WRITE
+	mov rax, 1
 	;; file descritor, standard output
-	mov rdi, STD_OUT
+	mov rdi, 1
 	;; buffer address
 	mov rsi, %1
 	;; length of buffer
@@ -39,9 +39,9 @@
 	push rsi
 	push rdx
 	;; sys_read syscall
-	mov rax, SYS_READ
+	mov rax, 0
 	;; file descritor, standard input
-	mov rdi, STD_IN
+	mov rdi, 0
 	;; buffer address
 	mov rsi, %1
 	;; length of buffer
