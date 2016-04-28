@@ -1,7 +1,7 @@
 ;; ******************************************
 ;; File: analyzer.asm
 ;; Authors: Liza Chaves Carranza [2013]
-;;          Marisol González [2014]
+;;          Marisol González Coto [2014]
 ;;          Elberth Adrian Garro Sanchez [2014088081]
 ;; Utility: Analyze XML-HTML Code
 ;; Built with NASM Linux 64 bits
@@ -22,15 +22,15 @@
 ;;
 %include "macros.inc"
 ;;
+;; section containing non initialized data
+;;
+section .bss
+;;
 ;; section containing initialized data
 ;;
 section .data
-	SYS_READ  equ 0
-	STD_IN    equ 0
-	SYS_WRITE equ 1
-	STD_OUT   equ 1
-	SYS_EXIT  equ 60
-	EXIT_CODE equ 0
+	msg: db 'Hello, world', 10
+		.len: equ $-msg
 ;;
 ;; section containing code
 ;;
@@ -38,14 +38,5 @@ section .text
 	global	_start
 _start:
 	;; your code here
-
-;;
-;; Exit from program
-;;
-exit:
-	;; syscall number
-	mov	rax, SYS_EXIT
-	;; exit code
-	mov	rdi, EXIT_CODE
-	;; call sys_exit
-	syscall
+	write msg, msg.len
+	exit

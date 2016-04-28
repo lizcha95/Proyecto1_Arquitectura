@@ -25,11 +25,10 @@
 	mov rdx, %2
 	;; call write syscall
 	syscall
-	;; return register previous values
-	pop rdx
-	pop rsi
+	pop rax
 	pop rdi
-	por rax
+	pop rsi
+	pop rdx
 %endmacro
 
 %macro read 2
@@ -55,4 +54,13 @@
 	pop rsi
 	pop rdi
 	por rax
+%endmacro
+
+%macro exit 0
+	;; sys_exit syscall
+	mov	rax, 60
+	;; exit code
+	mov	rdi, 0
+	;; call sys_exit
+	syscall
 %endmacro
