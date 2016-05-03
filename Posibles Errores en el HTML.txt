@@ -1,0 +1,10 @@
+Posibles Errores en el HTML:
+
+1. Tag no cierran
+2. Los nombres del tag son diferentes al abrir y cerrar. i.e: <li> </lia> <lia> </li>
+3. Comillas en los atributos de algún tag que no cierren.
+4. <input > tag es un caso especial.
+5. Comentarios <!--...--> caso especial.
+6. Validar <!DOCTYPE> </html>
+7. Validar <head> </head>
+8. Validar <body> </body> (guardar el tag hasta que se encuentre)
