@@ -1,5 +1,5 @@
 ;; ******************************************
-;; File: macros.asm
+;; File: macros.mac
 ;; Authors: Elberth Adrian Garro Sanchez [2014088081]
 ;; Utility: Simple Macros for NASM
 ;; Built with NASM Linux 64 bits
@@ -25,10 +25,11 @@
 	mov rdx, %2
 	;; call write syscall
 	syscall
-	pop rax
-	pop rdi
-	pop rsi
+	;; restore registers values
 	pop rdx
+	pop rsi
+	pop rdi
+	pop rax
 %endmacro
 
 %macro read 2
@@ -47,13 +48,61 @@
 	mov rdx, %2
 	;; call read syscall
 	syscall
-	;; save lenght of the input in r8
+	;; save input length
 	mov r8, rax
-	;; return register previous values
+	;; restore registers values
 	pop rdx
 	pop rsi
 	pop rdi
-	por rax
+	pop rax
+%endmacro
+
+%macro if 1
+	%push if
+    j%-1  %$ifnot
+%endmacro
+
+%macro else 0
+	%ifctx if
+    	%repl else
+        jmp %$ifend
+        %$ifnot:
+	%else
+    	%error  "expected `if' before `else'"
+	%endif
+%endmacro
+
+%macro endif 0
+	%ifctx if
+    	%$ifnot:
+        %pop
+	%elifctx else
+        %$ifend:
+        %pop
+	%else
+    	%error  "expected `if' or `else' before `endif'"
+	%endif
+%endmacro
+
+%macro tolower 1
+	%assign i 0
+	%rep MAX_FILE_SZ
+		;; test the byte on buffer against 'A'
+		cmp byte [%1+i], 'A'
+		if b
+			nop
+		else
+			;; test the byte on buffer against 'Z'
+			cmp byte [%1+i], 'Z'
+			if a
+				nop
+			else
+				;; convert to lowercase
+				add byte [%1+i], 20h
+			endif
+		endif
+	%assign i i+1
+	%endrep
 %endmacro
 
 %macro exit 0

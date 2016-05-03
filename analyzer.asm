@@ -14,29 +14,36 @@
 ;; Locate the code with cd, in my case:
 ;; cd '/media/psf/Home/Proyectos/NASM x64/Proyecto1_Arquitectura'
 ;; then write make
-;; and finally write ./analyzer
+;; and finally write ./analyzer < file.extension
 ;; ******************************************
 
 ;;
 ;; Include Macros Library
 ;;
-%include "macros.inc"
-;;
-;; section containing non initialized data
-;;
-section .bss
+%include 'macros.mac'
 ;;
 ;; section containing initialized data
 ;;
 section .data
-	msg: db 'Hello, world', 10
-		.len: equ $-msg
+	MAX_FILE_SZ equ 15 ; 4256
+	new_line: db 0xa
+		.len: equ $-new_line
+;;
+;; section containing non initialized data
+;;
+section .bss
+	in_file resb MAX_FILE_SZ
 ;;
 ;; section containing code
 ;;
 section .text
-	global	_start
+	global _start
 _start:
-	;; your code here
-	write msg, msg.len
+	read in_file, MAX_FILE_SZ
+	write in_file, MAX_FILE_SZ
+	write new_line, new_line.len
+	tolower in_file
+	write in_file, MAX_FILE_SZ
+	write new_line, new_line.len
+	;; 03/05/16 4:19 pm continue here..
 	exit
