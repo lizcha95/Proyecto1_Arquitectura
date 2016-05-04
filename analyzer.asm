@@ -33,6 +33,7 @@ section .data
 ;;
 section .bss
 	in_file resb MAX_FILE_SZ
+	test_file resb MAX_FILE_SZ
 ;;
 ;; section containing code
 ;;
@@ -40,10 +41,9 @@ section .text
 	global _start
 _start:
 	read in_file, MAX_FILE_SZ
-	write in_file, MAX_FILE_SZ
+	copy_buffer in_file, test_file
+	tolower test_file
+	write test_file, MAX_FILE_SZ
 	write new_line, new_line.len
-	tolower in_file
-	write in_file, MAX_FILE_SZ
-	write new_line, new_line.len
-	;; 03/05/16 4:19 pm continue here..
+	;; 03/05/16 6:39 pm continue here..
 	exit

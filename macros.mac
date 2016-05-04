@@ -84,6 +84,18 @@
 	%endif
 %endmacro
 
+%macro copy_buffer 2
+	push rdx
+	%assign i 0
+	%rep MAX_FILE_SZ
+		mov dl, byte[%1+i]
+		mov byte[%2+i], dl
+	%assign i i+1
+	%endrep
+	pop rdx
+%endmacro
+
+
 %macro tolower 1
 	%assign i 0
 	%rep MAX_FILE_SZ
