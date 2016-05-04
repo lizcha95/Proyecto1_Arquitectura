@@ -6,122 +6,125 @@
 ;; Copyright 2016 TEC
 ;; ******************************************
 
-;;
-;; macros
-;;
-%macro write 2
-	;; save registers values
-	push rax
-	push rdi
-	push rsi
-	push rdx
-	;; sys_write syscall
-	mov rax, 1
-	;; file descritor, standard output
-	mov rdi, 1
-	;; buffer address
-	mov rsi, %1
-	;; length of buffer
-	mov rdx, %2
-	;; call write syscall
-	syscall
-	;; restore registers values
-	pop rdx
-	pop rsi
-	pop rdi
-	pop rax
-%endmacro
+%ifndef MACROS_MAC
+    %define MACROS_MAC
+	%macro write 2
+		;; save registers values
+		push rax
+		push rdi
+		push rsi
+		push rdx
+		;; sys_write syscall
+		mov rax, 1
+		;; file descritor, standard output
+		mov rdi, 1
+		;; buffer address
+		mov rsi, %1
+		;; length of buffer
+		mov rdx, %2
+		;; call write syscall
+		syscall
+		;; restore registers values
+		pop rdx
+		pop rsi
+		pop rdi
+		pop rax
+	%endmacro
 
-%macro read 2
-	;; save registers values
-	push rax
-	push rdi
-	push rsi
-	push rdx
-	;; sys_read syscall
-	mov rax, 0
-	;; file descritor, standard input
-	mov rdi, 0
-	;; buffer address
-	mov rsi, %1
-	;; length of buffer
-	mov rdx, %2
-	;; call read syscall
-	syscall
-	;; save input length
-	mov r8, rax
-	;; restore registers values
-	pop rdx
-	pop rsi
-	pop rdi
-	pop rax
-%endmacro
+	%macro read 2
+		;; save registers values
+		push rax
+		push rdi
+		push rsi
+		push rdx
+		;; sys_read syscall
+		mov rax, 0
+		;; file descritor, standard input
+		mov rdi, 0
+		;; buffer address
+		mov rsi, %1
+		;; length of buffer
+		mov rdx, %2
+		;; call read syscall
+		syscall
+		;; save input length
+		mov r8, rax
+		;; restore registers values
+		pop rdx
+		pop rsi
+		pop rdi
+		pop rax
+	%endmacro
 
-%macro if 1
-	%push if
-    j%-1  %$ifnot
-%endmacro
+	%macro if 1
+		%push if
+	    j%-1  %$ifnot
+	%endmacro
 
-%macro else 0
-	%ifctx if
-    	%repl else
-        jmp %$ifend
-        %$ifnot:
-	%else
-    	%error  "expected `if' before `else'"
-	%endif
-%endmacro
+	%macro else 0
+		%ifctx if
+	    	%repl else
+	        jmp %$ifend
+	        %$ifnot:
+		%else
+	    	%error  "expected `if' before `else'"
+		%endif
+	%endmacro
 
-%macro endif 0
-	%ifctx if
-    	%$ifnot:
-        %pop
-	%elifctx else
-        %$ifend:
-        %pop
-	%else
-    	%error  "expected `if' or `else' before `endif'"
-	%endif
-%endmacro
+	%macro endif 0
+		%ifctx if
+	    	%$ifnot:
+	        %pop
+		%elifctx else
+	        %$ifend:
+	        %pop
+		%else
+	    	%error  "expected `if' or `else' before `endif'"
+		%endif
+	%endmacro
 
-%macro copy_buffer 2
-	push rdx
-	%assign i 0
-	%rep MAX_FILE_SZ
-		mov dl, byte[%1+i]
-		mov byte[%2+i], dl
-	%assign i i+1
-	%endrep
-	pop rdx
-%endmacro
+	%macro copy_buffer 2
+		push rdx
+		;; for (int i=0; i<MAX_FILE_SZ; ++i)
+		%assign i 0
+		%rep MAX_FILE_SZ
+			mov dl, byte[%1+i]
+			mov byte[%2+i], dl
+		%assign i i+1
+		%endrep
+		pop rdx
+	%endmacro
 
-
-%macro tolower 1
-	%assign i 0
-	%rep MAX_FILE_SZ
-		;; test the byte on buffer against 'A'
-		cmp byte [%1+i], 'A'
-		if b
-			nop
-		else
-			;; test the byte on buffer against 'Z'
-			cmp byte [%1+i], 'Z'
-			if a
+	%macro tolower 1
+		;; for (int i=0; i<MAX_FILE_SZ; ++i)
+		%assign i 0
+		%rep MAX_FILE_SZ
+			;; test the byte on buffer against 'A'
+			;; if char < 'A'
+			cmp byte [%1+i], 'A'
+			if b
 				nop
 			else
-				;; convert to lowercase
-				add byte [%1+i], 20h
+				;; test the byte on buffer against 'Z'
+				;; if char > 'Z'
+				cmp byte [%1+i], 'Z'
+				if a
+					nop
+				else
+					;; convert to lowercase
+					add byte [%1+i], 20h
+				endif
 			endif
-		endif
-	%assign i i+1
-	%endrep
-%endmacro
+		%assign i i+1
+		%endrep
+	%endmacro
 
-%macro exit 0
-	;; sys_exit syscall
-	mov	rax, 60
-	;; exit code
-	mov	rdi, 0
-	;; call sys_exit
-	syscall
-%endmacro
+	%macro exit 0
+		;; sys_exit syscall
+		mov	rax, 60
+		;; exit code
+		mov	rdi, 0
+		;; call sys_exit
+		syscall
+	%endmacro
+%endif
