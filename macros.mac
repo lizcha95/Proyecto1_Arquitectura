@@ -76,7 +76,6 @@
     ;;         %2 is the buffer address to store the copy of the original
     ;;
 	%macro copy_buffer 2
-		push rdx
 		;; for (int i=0; i<MAX_FILE_SZ; ++i)
 		%assign i 0
 		%rep MAX_FILE_SZ
@@ -84,7 +83,6 @@
 			mov byte[%2+i], dl
 		%assign i i+1
 		%endrep
-		pop rdx
 	%endmacro
     ;;
     ;; to_lower: converts uppercase buffer's chars into lowercase
@@ -125,6 +123,7 @@
         ;; 1 means that the search was ok
         mov r8, 0
         %rep MAX_FILE_SZ
+            ;; test the byte on buffer against the search char
             cmp byte [%1+i], %2
             if e
                 mov r8, 1

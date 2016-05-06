@@ -25,6 +25,7 @@ section .data
 	MAX_FILE_SZ equ 15 ; 4256
 	new_line: db 10
 		.len: equ $-new_line
+	;; debug byte
 	dbg: db 'xD'
 		.len: equ $-dbg
 ;;
