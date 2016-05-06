@@ -8,12 +8,12 @@
 
 %ifndef MACROS_MAC
     %define MACROS_MAC
+    ;;
+    ;; write: show on display a buffer
+    ;; params: %1 is the buffer adress which store the output
+    ;;         %2 is the length of the output
+    ;;
 	%macro write 2
-		;; save registers values
-		push rax
-		push rdi
-		push rsi
-		push rdx
 		;; sys_write syscall
 		mov rax, 1
 		;; file descritor, standard output
@@ -24,19 +24,13 @@
 		mov rdx, %2
 		;; call write syscall
 		syscall
-		;; restore registers values
-		pop rdx
-		pop rsi
-		pop rdi
-		pop rax
 	%endmacro
-
+    ;;
+    ;; read: saves an input in a buffer
+    ;; params: %1 is the buffer adress which will save the input
+    ;;         %2 is the length of the input
+    ;;
 	%macro read 2
-		;; save registers values
-		push rax
-		push rdi
-		push rsi
-		push rdx
 		;; sys_read syscall
 		mov rax, 0
 		;; file descritor, standard input
@@ -47,20 +41,15 @@
 		mov rdx, %2
 		;; call read syscall
 		syscall
-		;; save input length
-		mov r8, rax
-		;; restore registers values
-		pop rdx
-		pop rsi
-		pop rdi
-		pop rax
 	%endmacro
-
+    ;;
+    ;; if, else, endif: high level control structures for NASM
+    ;; params: %1 it is the condition to evaluate after cmp instruction
+    ;;
 	%macro if 1
 		%push if
 	    j%-1  %$ifnot
 	%endmacro
-
 	%macro else 0
 		%ifctx if
 	    	%repl else
@@ -70,7 +59,6 @@
 	    	%error  "expected `if' before `else'"
 		%endif
 	%endmacro
-
 	%macro endif 0
 		%ifctx if
 	    	%$ifnot:
@@ -82,7 +70,11 @@
 	    	%error  "expected `if' or `else' before `endif'"
 		%endif
 	%endmacro
-
+    ;;
+    ;; copy_buffer: copy a buffer into another buffer
+    ;; Params: %1 is the original buffer address
+    ;;         %2 is the buffer address to store the copy of the original
+    ;;
 	%macro copy_buffer 2
 		push rdx
 		;; for (int i=0; i<MAX_FILE_SZ; ++i)
@@ -94,8 +86,11 @@
 		%endrep
 		pop rdx
 	%endmacro
-
-	%macro tolower 1
+    ;;
+    ;; to_lower: converts uppercase buffer's chars into lowercase
+    ;; params: %1 is the buffer that will be transformed
+    ;;
+	%macro to_lower 1
 		;; for (int i=0; i<MAX_FILE_SZ; ++i)
 		%assign i 0
 		%rep MAX_FILE_SZ
@@ -118,7 +113,31 @@
 		%assign i i+1
 		%endrep
 	%endmacro
-
+    ;;
+    ;; find_char: search a char in a buffer
+    ;; params: %1 is the buffer where the search will be performed
+    ;;         %2 is the character that is required to find
+    ;;
+    %macro find_char 2
+        %assign i 0
+        ;; r8 will know if the search was succesful
+        ;; 0 means that the search was not ok
+        ;; 1 means that the search was ok
+        mov r8, 0
+        %rep MAX_FILE_SZ
+            cmp byte [%1+i], %2
+            if e
+                mov r8, 1
+                ;; r9 will save the char adress
+                mov r9, %1+i
+            endif
+        %assign i i+1
+        %endrep
+    %endmacro
+    ;;
+    ;; exit: program ends successfully
+    ;; params: does not have
+    ;;
 	%macro exit 0
 		;; sys_exit syscall
 		mov	rax, 60
