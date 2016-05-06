@@ -1,8 +1,6 @@
 ;; **********************************************************************
-;; File: analyzer.asm
-;; Authors: Liza Chaves Carranza [2013]
-;;          Marisol González Coto [2014]
-;;          Elberth Adrian Garro Sanchez [2014088081]
+;; File: xml_analyzer.asm
+;; Authors: Elberth Adrian Garro Sanchez [2014088081]
 ;; Utility: Analyze XML Code
 ;; Built with NASM Linux 64 bits
 ;; Copyright 2016 TEC
@@ -12,7 +10,7 @@
 ;; Locate the code with cd, in my case:
 ;; cd '/media/psf/Home/Proyectos/NASM x64/Proyecto1_Arquitectura'
 ;; then write make
-;; and finally write ./analyzer < file.extension
+;; and finally write ./xml_analyzer < file.extension
 ;; **********************************************************************
 ;;
 ;; include macros library
@@ -41,12 +39,13 @@ section .text
 	global _start
 _start:
 	input:
-		;; file read and process
+		;; file read and process...
 		read in_file, MAX_FILE_SZ
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
 	tag_test:
 		find_char file_to_parse, '<'
+		;find_char file_to_parse, '>'
 	debug:
 		;; write file
 		write r9, MAX_FILE_SZ

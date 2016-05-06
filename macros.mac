@@ -117,11 +117,12 @@
     ;;         %2 is the character that is required to find
     ;;
     %macro find_char 2
-        %assign i 0
         ;; r8 will know if the search was succesful
         ;; 0 means that the search was not ok
         ;; 1 means that the search was ok
         mov r8, 0
+        ;; for (int i=0; i<MAX_FILE_SZ; ++i)
+        %assign i 0
         %rep MAX_FILE_SZ
             ;; test the byte on buffer against the search char
             cmp byte [%1+i], %2
