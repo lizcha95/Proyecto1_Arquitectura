@@ -8,9 +8,9 @@
 ;; Instructions for run this code:
 ;; Open terminal
 ;; Locate the code with cd, in my case:
-;; cd '/media/psf/Home/Proyectos/NASM x64/Proyecto1_Arquitectura'
+;; cd '/media/psf/Home/Proyectos/NASM x64/Proyecto1_Arquitectura/xml_analyzer'
 ;; then write make
-;; and finally write ./xml_analyzer < file.extension
+;; and finally write ./xml_analyzer < file.xml
 ;; **********************************************************************
 ;;
 ;; include macros library
@@ -20,7 +20,7 @@
 ;; section containing initialized data
 ;;
 section .data
-	MAX_FILE_SZ equ 15 ; 4256
+	MAX_FILE_SZ equ 20 ; 4256
 	new_line: db 10
 		.len: equ $-new_line
 	;; debug byte

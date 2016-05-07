@@ -127,9 +127,12 @@
             ;; test the byte on buffer against the search char
             cmp byte [%1+i], %2
             if e
+                ;; save search status
                 mov r8, 1
                 ;; r9 will save the char adress
                 mov r9, %1+i
+                ;; stop search
+                %exitrep
             endif
         %assign i i+1
         %endrep
