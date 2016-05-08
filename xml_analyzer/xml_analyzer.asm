@@ -20,7 +20,7 @@
 ;; section containing initialized data
 ;;
 section .data
-	MAX_FILE_SZ equ 20 ; 4256
+	MAX_FILE_SZ equ 35 ; 4256
 	new_line: db 10
 		.len: equ $-new_line
 	;; debug byte
@@ -36,6 +36,31 @@ section .bss
 ;; section containing code
 ;;
 section .text
+	;;
+    ;; find_char: search a char in a buffer
+    ;; params: %1 is the buffer where the search will be performed
+    ;;         %2 is the character that is required to find
+    ;;
+    find_char:
+        ;; r8 will know if the search was succesful
+        ;; 0 means that the search was not ok
+        ;; 1 means that the search was ok
+        mov r8, 0
+        ;; for (int i=0; i<MAX_FILE_SZ; ++i)
+        %assign i 0
+        %rep MAX_FILE_SZ
+            ;; test the byte on buffer against the search char
+            cmp byte [file_to_parse+i], al
+            ;; if current char is equal to search char
+            if e
+                ;; save search status
+                mov r8, 1
+                ;; r9 saves the current char adress
+                mov r9, file_to_parse+i
+                ret
+            endif
+        %assign i i+1
+        %endrep
 	global _start
 _start:
 	input:
@@ -43,9 +68,9 @@ _start:
 		read in_file, MAX_FILE_SZ
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
-	tag_test:
-		find_char file_to_parse, '<'
-		;find_char file_to_parse, '>'
+	individual_tag_test:
+		mov al, '<'
+		call find_char
 	debug:
 		;; write file
 		write r9, MAX_FILE_SZ
