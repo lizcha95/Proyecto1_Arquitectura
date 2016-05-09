@@ -23,8 +23,10 @@
 ;; **********************************************************************
 section .data
 	MAX_FILE_SZ equ 792 ; 4256
-	err: db 'error de tag', 10
-		.len: equ $-err
+	error1_test1: db 'Error: falta < antes de > en línea: x,y', 10
+		.len: equ $-error1_test1
+	error2_test1: db 'Error: falta > despues de < en línea: x,y', 10
+		.len: equ $-error2_test1
 
 ;; **********************************************************************
 ;; section containing non initialized data
@@ -43,7 +45,7 @@ _start:
 		read in_file, MAX_FILE_SZ
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
-	first_xml_test:
+	test1:
 		call individual_tag_test
 	end_test:
 		exit
@@ -81,8 +83,7 @@ individual_tag_test:
 		else
 			cmp byte [file_to_parse+r8], '>'
 			if e
-				;; error: falta '<' antes de '>' en línea: x,y
-				write err, err.len
+				write error1_test1, error1_test1.len
 			endif
 		endif
 		jmp .loop
@@ -93,8 +94,7 @@ individual_tag_test:
 		else
 			cmp byte [file_to_parse+r8], '<'
 			if e
-				;; error: falta '>' despues de '<' en línea: x,y
-				write err, err.len
+				write error2_test1, error2_test1.len
 				mov r9, 0
 			endif
 		endif
