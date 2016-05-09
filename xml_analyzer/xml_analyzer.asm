@@ -59,19 +59,17 @@ _start:
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
 	run_test1:
-		call individual_tag_test
+		mov r8, 1
+		call get_curr_line
+		mov rax, r11
+		call write_integer
+		;call individual_tag_test
 	finish_analyzing:
 		exit
 
 ;; **********************************************************************
 ;; Procedures
 ;;
-;; Registers:
-;;			r8: aux_buffer_index, rsp backups
-;;			r9: line_error_location
-;;			r10: column_error_location
-;;			r11: main_buffer_index
-;;			r12: flag check_tag_candidate
 ;; **********************************************************************
 
 ;;
@@ -81,26 +79,26 @@ _start:
 
 get_curr_line:
 	;; auxiliar buffer index
-	mov r8, -1
+	mov r10, -1
 	;; contain the number of new lines
-	mov r9, -1
-	.loopa:
+	mov r11, 1
+	.loop:
 		;; increment and compare
-		inc r8
-		;; test aux buffer index (r8) against buffer index (r9)
-		cmp r8, r11
+		inc r10
+		;; test aux buffer index (r10) against buffer index (r8)
+		cmp r10, r8
 		if e
 			;; end count
 			ret
+		else
+			;; test the current byte on buffer against '\n'
+			cmp byte [file_to_parse+r10], 10
+			if e
+				;; store lines quant
+				inc r11
+			endif
+			jmp .loop
 		endif
-	.count_new_lines:
-		;; test the current byte on buffer against '\n'
-		cmp byte [file_to_parse+r8], 10
-		if e
-			;; store lines quant
-			inc r9
-		endif
-		jmp .loopa
 
 ;;
 ;; get_curr_col: get the current column where r11 buffer index is
@@ -109,22 +107,22 @@ get_curr_line:
 
 get_curr_col:
 	;; auxiliar buffer index
-	mov r8, r11
+	mov r10, r8
 	;; contain the number of columns
-	mov r10, -1
-	.loopb:
+	mov r11, -1
+	.loop:
 		;; decrement and compare
-		dec r8
+		dec r10
 		;; test aux buffer index (r8) against new line (\n)
-		cmp r8, 10
+		cmp r10, 10
 		if e
 			;; end count
 			ret
 		else
 			;; store columns quant
-			inc r10
+			inc r11
 		endif
-		jmp .loopb
+		jmp .loop
 
 ;;
 ;; write_integer: write on display the ascii representation of integer
@@ -133,7 +131,7 @@ get_curr_col:
 
 write_integer:
 	;; save stack pointer
-	mov r8, rsp
+	mov r15, rsp
     ;; number counter
     mov rcx, 0
     itoa:
@@ -159,8 +157,8 @@ write_integer:
         lea rdx, [rcx * 8]
         ;; write number in ascii representation
         write rsp, rdx
-    clean_stack:
-		mov rsp, r8
+    restore_stack:
+		mov rsp, r15
 		ret
 
 ;;
@@ -168,68 +166,51 @@ write_integer:
 ;;
 
 individual_tag_test:
-	;; initial message
+	;; write init message
 	write test1_init, test1_init.len
-	;; start buffer index
-	mov r11, -1
-	;; start flag to check_tag_candidate
-	mov r12, 0
+	;; buffer index
+	mov r8, -1
+	;; flag to check_tag_candidate
+	mov r9, 0
 	.loop:
 		;; increment and compare
-		inc r11
-		cmp r11, MAX_FILE_SZ
+		inc r8
+		cmp r8, MAX_FILE_SZ
 		if e
 			;; end test
 			ret
 		endif
-		;; go to search_tag or check_tag
-		cmp r12, 0
+		;; goto search_tag or check_tag
+		cmp r9, 0
 		if e
 			jmp .search_tag_candidate
 		else
 			jmp .check_tag_candidate
 		endif
 	.search_tag_candidate:
-		cmp byte [file_to_parse+r11], '<'
+		cmp byte [file_to_parse+r8], '<'
 		if e
-			mov r12, 1
+			;; turn on check_tag_candidate
+			mov r9, 1
 		else
-			cmp byte [file_to_parse+r11], '>'
+			cmp byte [file_to_parse+r8], '>'
 			if e
-				;; write error location
 				write error1_test1, error1_test1.len
-				;call get_curr_line
-				;mov rax, r9
-				;call write_integer
-				;write DOTS, 1
-				;call get_curr_col
-				;mov rax, r10
-				;call write_integer
-				write NEW_LINE, 1
 			endif
 		endif
 		;; keep searching...
 		jmp .loop
 	.check_tag_candidate:
-		cmp byte [file_to_parse+r11], '>'
+		cmp byte [file_to_parse+r8], '>'
 		if e
 			;; turn off check_tag_candidate
-			mov r12, 0
+			mov r9, 0
 		else
-			cmp byte [file_to_parse+r11], '<'
+			cmp byte [file_to_parse+r8], '<'
 			if e
-				;; write error location
 				write error2_test1, error2_test1.len
-				;call get_curr_line
-				;mov rax, r9
-				;call write_integer
-				;write DOTS, 1
-				;call get_curr_col
-				;mov rax, r10
-				;call write_integer
-				write NEW_LINE, 1
 				;; turn off check_tag_candidate
-				mov r12, 0
+				mov r9, 0
 			endif
 		endif
 		;; keep searching...
