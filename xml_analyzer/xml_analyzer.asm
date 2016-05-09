@@ -1,7 +1,7 @@
 ;; **********************************************************************
 ;; File: xml_analyzer.asm
-;; Authors: Elberth Adrian Garro Sanchez [2014088081]
-;; Utility: Analyze XML Code
+;; Authors: Elberth Adrián Garro Sanchez [2014088081]
+;; Utility: Analyzes XML Code
 ;; Built with NASM Linux 64 bits
 ;; Copyright 2016 TEC
 ;;
@@ -16,21 +16,24 @@
 ;; **********************************************************************
 ;; include macros library
 ;; **********************************************************************
+
 %include 'macros.mac'
 
 ;; **********************************************************************
 ;; section containing initialized data
 ;; **********************************************************************
+
 section .data
 	MAX_FILE_SZ equ 792 ; 4256
-	error1_test1: db 'Error: falta < antes de > en línea: x,y', 10
+	error1_test1: db 'Error: falta < antes de > en: x,y', 10
 		.len: equ $-error1_test1
-	error2_test1: db 'Error: falta > despues de < en línea: x,y', 10
+	error2_test1: db 'Error: falta > después de < en: x,y', 10
 		.len: equ $-error2_test1
 
 ;; **********************************************************************
 ;; section containing non initialized data
 ;; **********************************************************************
+
 section .bss
 	in_file resb MAX_FILE_SZ
 	file_to_parse resb MAX_FILE_SZ
@@ -38,6 +41,7 @@ section .bss
 ;; **********************************************************************
 ;; section containing code
 ;; **********************************************************************
+
 section .text
 	global _start
 _start:
@@ -53,6 +57,7 @@ _start:
 ;; **********************************************************************
 ;; Procedures
 ;; **********************************************************************
+
 ;;
 ;; individual_tag_test: check individual tags candidates in xml file
 ;;
@@ -69,7 +74,7 @@ individual_tag_test:
 			;; end test
 			ret
 		endif
-		;; goto search_tag or check_tag
+		;; go to search_tag or check_tag
 		cmp r9, 0
 		if e
 			jmp .search_tag_candidate
@@ -100,4 +105,6 @@ individual_tag_test:
 		endif
 		jmp .loop
 
-;; **********************************************************************
+;;
+;; Proc 2
+;;
