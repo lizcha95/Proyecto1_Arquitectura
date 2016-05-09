@@ -59,11 +59,11 @@ _start:
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
 	run_test1:
-		mov r8, 1
-		call get_curr_line
-		mov rax, r11
-		call write_integer
-		;call individual_tag_test
+		;mov r8, 50
+		;call get_curr_col
+		;mov rax, r11
+		;call write_integer
+		call individual_tag_test
 	finish_analyzing:
 		exit
 
@@ -90,15 +90,15 @@ get_curr_line:
 		if e
 			;; end count
 			ret
-		else
-			;; test the current byte on buffer against '\n'
-			cmp byte [file_to_parse+r10], 10
-			if e
-				;; store lines quant
-				inc r11
-			endif
-			jmp .loop
 		endif
+	.count_new_lines:
+		;; test the current byte on buffer against '\n'
+		cmp byte [file_to_parse+r10], 10
+		if e
+			;; store lines quant
+			inc r11
+		endif
+		jmp .loop
 
 ;;
 ;; get_curr_col: get the current column where r11 buffer index is
@@ -109,11 +109,11 @@ get_curr_col:
 	;; auxiliar buffer index
 	mov r10, r8
 	;; contain the number of columns
-	mov r11, -1
+	mov r11, 1
 	.loop:
 		;; decrement and compare
 		dec r10
-		;; test aux buffer index (r8) against new line (\n)
+		;; test aux buffer index (r10) against new line (\n)
 		cmp r10, 10
 		if e
 			;; end count
@@ -196,6 +196,10 @@ individual_tag_test:
 			cmp byte [file_to_parse+r8], '>'
 			if e
 				write error1_test1, error1_test1.len
+				call get_curr_line
+				mov rax, r11
+				call write_integer
+				write NEW_LINE, 1
 			endif
 		endif
 		;; keep searching...
@@ -209,6 +213,10 @@ individual_tag_test:
 			cmp byte [file_to_parse+r8], '<'
 			if e
 				write error2_test1, error2_test1.len
+				call get_curr_line
+				mov rax, r11
+				call write_integer
+				write NEW_LINE, 1
 				;; turn off check_tag_candidate
 				mov r9, 0
 			endif
