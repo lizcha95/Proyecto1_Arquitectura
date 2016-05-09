@@ -24,10 +24,14 @@
 ;; **********************************************************************
 
 section .data
+	;; numeric constants
 	MAX_FILE_SZ equ 792 ; 4256
-	error1_test1: db 'Error: falta < antes de > en: x,y', 10
+	;; test1 strings
+	test1_init: db 'Ejecutando verificación de tags individuales en xml...', 10
+		.len: equ $-test1_init
+	error1_test1: db 'Error: falta < antes de > en: '
 		.len: equ $-error1_test1
-	error2_test1: db 'Error: falta > después de < en: x,y', 10
+	error2_test1: db 'Error: falta > después de < en: '
 		.len: equ $-error2_test1
 
 ;; **********************************************************************
@@ -37,7 +41,7 @@ section .data
 section .bss
 	in_file resb MAX_FILE_SZ
 	file_to_parse resb MAX_FILE_SZ
-	file_to_ident resb MAX_FILE_SZ
+	out_file resb MAX_FILE_SZ
 
 ;; **********************************************************************
 ;; section containing code
@@ -60,57 +64,107 @@ _start:
 ;; **********************************************************************
 
 ;;
+;; get_curr_line: get the current line where r11 buffer index is
+;;				  r9 will contain the result
+;;
+
+get_curr_line:
+	;; auxiliar buffer index
+	mov r8, -1
+	;; contain the number of new lines
+	mov r9, -1
+	.loop:
+		;; increment and compare
+		inc r8
+		;; test aux buffer index (r8) against buffer index (r9)
+		cmp r8, r11
+		if e
+			;; end count
+			ret
+		endif
+	.count_new_lines:
+		;; test the current byte on buffer against '\n'
+		cmp byte [file_to_parse+r8], 10
+		if e
+			inc r9
+		endif
+		jmp .loop
+
+;;
+;; get_curr_col: get the current column where r11 buffer index is
+;;               r10 will have the result
+;;
+
+get_curr_col:
+	;; auxiliar buffer index
+	mov r8, r11
+	;; contain the number of columns
+	mov r10, -1
+	.loop:
+		;; decrement and compare
+		dec r8
+		;; test aux buffer index (r8) against new line (\n)
+		cmp r8, 10
+		if e
+			;; end count
+			ret
+		else
+			inc r10
+		endif
+		jmp .loop
+
+;;
 ;; individual_tag_test: check individual tags candidates in xml file
 ;;
 
 individual_tag_test:
-	;; buffer index
-	mov r8, -1
-	;; flag to check_tag_candidate
-	mov r9, 0
-	;; flag to know if there is any error in the file
-	mov r10, 0
+	;; initial message
+	write test1_init, test1_init.len
+	;; start buffer index
+	mov r11, -1
+	;; start flag to check_tag_candidate
+	mov r12, 0
 	.loop:
 		;; increment and compare
-		inc r8
-		cmp r8, MAX_FILE_SZ
+		inc r11
+		cmp r11, MAX_FILE_SZ
 		if e
 			;; end test
 			ret
 		endif
 		;; go to search_tag or check_tag
-		cmp r9, 0
+		cmp r12, 0
 		if e
 			jmp .search_tag_candidate
 		else
 			jmp .check_tag_candidate
 		endif
 	.search_tag_candidate:
-		cmp byte [file_to_parse+r8], '<'
+		cmp byte [file_to_parse+r11], '<'
 		if e
-			mov r9, 1
+			mov r12, 1
 		else
-			cmp byte [file_to_parse+r8], '>'
+			cmp byte [file_to_parse+r11], '>'
 			if e
+				;; write error location
 				write error1_test1, error1_test1.len
-				mov r10, 1
 			endif
 		endif
+		;; keep searching...
 		jmp .loop
 	.check_tag_candidate:
-		cmp byte [file_to_parse+r8], '>'
+		cmp byte [file_to_parse+r11], '>'
 		if e
-			mov r9, 0
+			;; turn off check_tag_candidate
+			mov r12, 0
 		else
-			cmp byte [file_to_parse+r8], '<'
+			cmp byte [file_to_parse+r11], '<'
 			if e
+				;; write error location
 				write error2_test1, error2_test1.len
-				mov r9, 0
-				mov r10, 1
+				;; turn off check_tag_candidate
+				mov r12, 0
 			endif
 		endif
+		;; keep searching...
 		jmp .loop
-
-;;
-;; Procedure 2
-;;
