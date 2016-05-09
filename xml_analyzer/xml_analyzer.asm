@@ -21,11 +21,8 @@
 ;;
 section .data
 	MAX_FILE_SZ equ 35 ; 4256
-	new_line: db 10
-		.len: equ $-new_line
-	;; debug byte
-	dbg: db 'error'
-		.len: equ $-dbg
+	err: db 'error de tag', 10
+		.len: equ $-err
 ;;
 ;; section containing non initialized data
 ;;
@@ -39,65 +36,58 @@ section .text
 	global _start
 _start:
 	input:
-		;; file read and process...
 		read in_file, MAX_FILE_SZ
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
 	first_test:
 		call individual_tag_test
-	exit
+	end_test:
+		exit
 ;;
 ;; individual_tag_test: check individual tags candidates in xml file
 ;;
 individual_tag_test:
 	;; buffer index
-	mov rcx, -1
-	;; boolean check_tag
-	mov r8, 0
+	mov r8, -1
+	;; boolean check_tag_candidate
+	mov r9, 0
 	.loop:
 		;; increment and compare
-		inc rcx
-		cmp rcx, MAX_FILE_SZ
+		inc r8
+		cmp r8, MAX_FILE_SZ
 		if e
 			;; end test
 			ret
 		endif
 		;; goto search_tag or check_tag
-		cmp r8, 0
+		cmp r9, 0
 		if e
 			jmp .search_tag_candidate
 		else
 			jmp .check_tag_candidate
 		endif
 	.search_tag_candidate:
-		cmp byte [file_to_parse+rcx], '<'
+		cmp byte [file_to_parse+r8], '<'
 		if e
-			mov r8, 1
-			jmp .loop
+			mov r9, 1
 		else
-			cmp byte [file_to_parse+rcx], '>'
+			cmp byte [file_to_parse+r8], '>'
 			if e
 				;; error: falta '<' antes de '>' en línea: x,y
-				write dbg, dbg.len
-				jmp .loop
-			else
-				jmp .loop
+				write err, err.len
 			endif
 		endif
+		jmp .loop
 	.check_tag_candidate:
-		cmp byte [file_to_parse+rcx], '>'
+		cmp byte [file_to_parse+r8], '>'
 		if e
-			mov r8, 0
-			jmp .loop
+			mov r9, 0
 		else
-			cmp byte [file_to_parse+rcx], '<'
+			cmp byte [file_to_parse+r8], '<'
 			if e
 				;; error: falta '>' despues de '<' en línea: x,y
-				write dbg, dbg.len
-				write new_line, new_line.len
-				mov r8, 0
-				jmp .loop
-			else
-				jmp .loop
+				write err, err.len
+				mov r9, 0
 			endif
 		endif
+		jmp .loop
