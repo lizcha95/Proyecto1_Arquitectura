@@ -64,6 +64,13 @@ _start:
 
 ;; **********************************************************************
 ;; Procedures
+;;
+;; Registers:
+;;			r8: aux_buffer_index
+;;			r9: line_error_location
+;;			r10: column_error_location
+;;			r11: main_buffer_index
+;;			r12: flag check_tag_candidate
 ;; **********************************************************************
 
 ;;
@@ -113,6 +120,7 @@ get_curr_col:
 			;; end count
 			ret
 		else
+			;; store columns quant
 			inc r10
 		endif
 		jmp .loop

@@ -116,9 +116,9 @@
     ;; params: %1 is register with a number to be writed
     ;;
     %macro write_integer 1
-    mov	rax, %1
-    ;; number counter
-    mov rcx, 0
+        mov	rax, %1
+        ;; number counter
+        mov rcx, 0
         itoa:
             ;; reminder from division
             mov	rdx, 0
@@ -140,7 +140,7 @@
         write_result:
             ;; calculate number length
             lea rdx, [rcx * 8]
-            ;; write number
+            ;; write number in ascii representation
             write rsp, rdx
         clean_stack:
             ;
