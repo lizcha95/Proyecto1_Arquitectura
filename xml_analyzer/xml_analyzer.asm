@@ -26,6 +26,8 @@
 section .data
 	;; numeric constants
 	MAX_FILE_SZ equ 792 ; 4256
+	;; new line
+	NEW_LINE db 10
 	;; test1 strings
 	test1_init: db 'Ejecutando verificación de tags individuales en xml...', 10
 		.len: equ $-test1_init
@@ -41,8 +43,6 @@ section .data
 section .bss
 	in_file resb MAX_FILE_SZ
 	file_to_parse resb MAX_FILE_SZ
-	curr_line resb MAX_FILE_SZ
-	curr_col resb MAX_FILE_SZ
 	out_file resb MAX_FILE_SZ
 
 ;; **********************************************************************
@@ -56,17 +56,16 @@ _start:
 		read in_file, MAX_FILE_SZ
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
-	test1:
-		;call individual_tag_test
-		write_integer 2016
-	end_test:
+	run_test1:
+		call individual_tag_test
+	finish_analyzing:
 		exit
 
 ;; **********************************************************************
 ;; Procedures
 ;;
 ;; Registers:
-;;			r8: aux_buffer_index
+;;			r8: aux_buffer_index, rsp backups
 ;;			r9: line_error_location
 ;;			r10: column_error_location
 ;;			r11: main_buffer_index
@@ -126,6 +125,43 @@ get_curr_col:
 		jmp .loop
 
 ;;
+;; write_integer: write on display the ascii representation of integer
+;; params: rax is register with a number to be writed
+;;
+
+write_integer:
+	;; save stack pointer
+	mov r8, rsp
+    ;; number counter
+    mov rcx, 0
+    itoa:
+        ;; reminder from division
+        mov	rdx, 0
+        ;; base
+        mov	rbx, 10
+        ;; rax = rax / 10
+        div	rbx
+        ;; add \0
+        add	rdx, 48
+        add	rdx, 0x0
+        ;; push reminder to stack
+        push rdx
+        ;; go next
+        inc	rcx
+        ;; check factor with 0
+        cmp	rax, 0
+        ;; loop again
+        jne	itoa
+    write_result:
+        ;; calculate number length
+        lea rdx, [rcx * 8]
+        ;; write number in ascii representation
+        write rsp, rdx
+    clean_stack:
+		mov rsp, r8
+		ret
+
+;;
 ;; individual_tag_test: check individual tags candidates in xml file
 ;;
 
@@ -160,6 +196,16 @@ individual_tag_test:
 			if e
 				;; write error location
 				write error1_test1, error1_test1.len
+
+				call get_curr_line
+				mov rax, r9
+				call write_integer
+
+				call get_curr_col
+				mov rax, r10
+				call write_integer
+
+				write NEW_LINE, 1
 			endif
 		endif
 		;; keep searching...
@@ -174,6 +220,16 @@ individual_tag_test:
 			if e
 				;; write error location
 				write error2_test1, error2_test1.len
+
+				call get_curr_line
+				mov rax, r9
+				call write_integer
+
+				call get_curr_col
+				mov rax, r10
+				call write_integer
+
+				write NEW_LINE, 1
 				;; turn off check_tag_candidate
 				mov r12, 0
 			endif
