@@ -26,14 +26,16 @@
 section .data
 	;; numeric constants
 	MAX_FILE_SZ equ 792 ; 4256
+	;; two dots
+	DOTS db ':'
 	;; new line
 	NEW_LINE db 10
 	;; test1 strings
 	test1_init: db 'Ejecutando verificación de tags individuales en xml...', 10
 		.len: equ $-test1_init
-	error1_test1: db 'Error: falta < antes de > en: '
+	error1_test1: db 'Error: falta < antes de > en '
 		.len: equ $-error1_test1
-	error2_test1: db 'Error: falta > después de < en: '
+	error2_test1: db 'Error: falta > después de < en '
 		.len: equ $-error2_test1
 
 ;; **********************************************************************
@@ -82,7 +84,7 @@ get_curr_line:
 	mov r8, -1
 	;; contain the number of new lines
 	mov r9, -1
-	.loop:
+	.loopa:
 		;; increment and compare
 		inc r8
 		;; test aux buffer index (r8) against buffer index (r9)
@@ -98,7 +100,7 @@ get_curr_line:
 			;; store lines quant
 			inc r9
 		endif
-		jmp .loop
+		jmp .loopa
 
 ;;
 ;; get_curr_col: get the current column where r11 buffer index is
@@ -110,7 +112,7 @@ get_curr_col:
 	mov r8, r11
 	;; contain the number of columns
 	mov r10, -1
-	.loop:
+	.loopb:
 		;; decrement and compare
 		dec r8
 		;; test aux buffer index (r8) against new line (\n)
@@ -122,7 +124,7 @@ get_curr_col:
 			;; store columns quant
 			inc r10
 		endif
-		jmp .loop
+		jmp .loopb
 
 ;;
 ;; write_integer: write on display the ascii representation of integer
@@ -196,15 +198,13 @@ individual_tag_test:
 			if e
 				;; write error location
 				write error1_test1, error1_test1.len
-
-				call get_curr_line
-				mov rax, r9
-				call write_integer
-
-				call get_curr_col
-				mov rax, r10
-				call write_integer
-
+				;call get_curr_line
+				;mov rax, r9
+				;call write_integer
+				;write DOTS, 1
+				;call get_curr_col
+				;mov rax, r10
+				;call write_integer
 				write NEW_LINE, 1
 			endif
 		endif
@@ -220,15 +220,13 @@ individual_tag_test:
 			if e
 				;; write error location
 				write error2_test1, error2_test1.len
-
-				call get_curr_line
-				mov rax, r9
-				call write_integer
-
-				call get_curr_col
-				mov rax, r10
-				call write_integer
-
+				;call get_curr_line
+				;mov rax, r9
+				;call write_integer
+				;write DOTS, 1
+				;call get_curr_col
+				;mov rax, r10
+				;call write_integer
 				write NEW_LINE, 1
 				;; turn off check_tag_candidate
 				mov r12, 0
