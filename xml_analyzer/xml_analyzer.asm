@@ -4,45 +4,53 @@
 ;; Utility: Analyze XML Code
 ;; Built with NASM Linux 64 bits
 ;; Copyright 2016 TEC
-;; **********************************************************************
+;;
 ;; Instructions for run this code:
-;; Open terminal
+;; Open Linux terminal
 ;; Locate the code with cd, in my case:
 ;; cd '/media/psf/Home/Proyectos/NASM x64/Proyecto1_Arquitectura/xml_analyzer'
 ;; then write make
 ;; and finally write ./xml_analyzer < test.xml
 ;; **********************************************************************
-;;
+
+;; **********************************************************************
 ;; include macros library
-;;
+;; **********************************************************************
 %include 'macros.mac'
-;;
+
+;; **********************************************************************
 ;; section containing initialized data
-;;
+;; **********************************************************************
 section .data
-	MAX_FILE_SZ equ 35 ; 4256
+	MAX_FILE_SZ equ 792 ; 4256
 	err: db 'error de tag', 10
 		.len: equ $-err
-;;
+
+;; **********************************************************************
 ;; section containing non initialized data
-;;
+;; **********************************************************************
 section .bss
 	in_file resb MAX_FILE_SZ
 	file_to_parse resb MAX_FILE_SZ
-;;
+
+;; **********************************************************************
 ;; section containing code
-;;
+;; **********************************************************************
 section .text
 	global _start
 _start:
-	input:
+	input_file:
 		read in_file, MAX_FILE_SZ
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
-	first_test:
+	first_xml_test:
 		call individual_tag_test
 	end_test:
 		exit
+
+;; **********************************************************************
+;; Procedures
+;; **********************************************************************
 ;;
 ;; individual_tag_test: check individual tags candidates in xml file
 ;;
@@ -91,3 +99,5 @@ individual_tag_test:
 			endif
 		endif
 		jmp .loop
+
+;; **********************************************************************
