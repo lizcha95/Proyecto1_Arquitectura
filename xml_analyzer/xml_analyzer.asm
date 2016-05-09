@@ -41,6 +41,8 @@ section .data
 section .bss
 	in_file resb MAX_FILE_SZ
 	file_to_parse resb MAX_FILE_SZ
+	curr_line resb MAX_FILE_SZ
+	curr_col resb MAX_FILE_SZ
 	out_file resb MAX_FILE_SZ
 
 ;; **********************************************************************
@@ -55,7 +57,8 @@ _start:
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
 	test1:
-		call individual_tag_test
+		;call individual_tag_test
+		write_integer 2016
 	end_test:
 		exit
 
@@ -86,6 +89,7 @@ get_curr_line:
 		;; test the current byte on buffer against '\n'
 		cmp byte [file_to_parse+r8], 10
 		if e
+			;; store lines quant
 			inc r9
 		endif
 		jmp .loop
