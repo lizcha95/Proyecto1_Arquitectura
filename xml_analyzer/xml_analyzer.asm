@@ -69,24 +69,23 @@ _start:
 
 ;; **********************************************************************
 ;; Procedures
-;;
 ;; **********************************************************************
 
 ;;
-;; get_curr_line: get the current line where r11 buffer index is
-;;				  r9 will contain the result
+;; get_curr_line: get the current line where r8 buffer index is
+;;				  r11 will contain the result
 ;;
 
 get_curr_line:
 	;; auxiliar buffer index
-	mov r10, -1
+	mov r10, r8
 	;; contain the number of new lines
 	mov r11, 1
 	.loop:
 		;; increment and compare
-		inc r10
-		;; test aux buffer index (r10) against buffer index (r8)
-		cmp r10, r8
+		dec r10
+		;; test aux buffer index (r10) against 0
+		cmp r10, 0
 		if e
 			;; end count
 			ret
@@ -101,8 +100,8 @@ get_curr_line:
 		jmp .loop
 
 ;;
-;; get_curr_col: get the current column where r11 buffer index is
-;;               r10 will have the result
+;; get_curr_col: get the current column where r8 buffer index is
+;;               r11 will have the result
 ;;
 
 get_curr_col:
@@ -199,6 +198,7 @@ individual_tag_test:
 				call get_curr_line
 				mov rax, r11
 				call write_integer
+				write DOTS, 1
 				write NEW_LINE, 1
 			endif
 		endif
@@ -214,11 +214,11 @@ individual_tag_test:
 			if e
 				write error2_test1, error2_test1.len
 				call get_curr_line
+				;dec r11
 				mov rax, r11
 				call write_integer
+				write DOTS, 1
 				write NEW_LINE, 1
-				;; turn off check_tag_candidate
-				mov r9, 0
 			endif
 		endif
 		;; keep searching...

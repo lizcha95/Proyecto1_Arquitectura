@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE PARTS SYSTEM "parts.dtd">
-<?xml-stylesheet type="text/css" href="xmlpartsstyle.css"?
+<?xml-stylesheet type="text/css" href="xmlpartsstyle.css"?>
 <PARTS>
    <TITLE>Computer Parts</TITLE>
    <PART>
@@ -8,7 +8,7 @@
       <MANUFACTURER>ASUS</MANUFACTURER>
       <MODEL>P3B-F</MODEL>
       <COST> 123.00</COST>
-   </PART>
+  </PART>
    <PART>
       <ITEM>Video Card</ITEM>
       <MANUFACTURER>ATI</MANUFACTURER>
@@ -26,5 +26,5 @@
       <MANUFACTURER>LG Electronics</MANUFACTURER>
       <MODEL> 995E</MODEL>
       <COST> 290.00</COST>
-   </PART>
+  </PART>
 </PARTS>
