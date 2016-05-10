@@ -118,7 +118,7 @@ get_curr_col:
 			;; end count
 			ret
 		else
-			;; store columns quant
+			;; count column
 			inc r11
 		endif
 		jmp .loop
@@ -199,6 +199,9 @@ individual_tag_test:
 				mov rax, r11
 				call write_integer
 				write DOTS, 1
+				call get_curr_col
+				mov rax, r11
+				call write_integer
 				write NEW_LINE, 1
 			endif
 		endif
@@ -214,10 +217,12 @@ individual_tag_test:
 			if e
 				write error2_test1, error2_test1.len
 				call get_curr_line
-				;dec r11
 				mov rax, r11
 				call write_integer
 				write DOTS, 1
+				call get_curr_col
+				mov rax, r11
+				call write_integer
 				write NEW_LINE, 1
 			endif
 		endif
