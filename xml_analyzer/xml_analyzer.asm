@@ -113,14 +113,13 @@ get_curr_col:
 		;; decrement and compare
 		dec r10
 		;; test aux buffer index (r10) against new line (\n)
-		cmp r10, 10
+		cmp byte [file_to_parse+r10], 10
 		if e
 			;; end count
 			ret
-		else
-			;; count column
-			inc r11
 		endif
+	.count_cols:
+		inc r11
 		jmp .loop
 
 ;;
@@ -228,3 +227,10 @@ individual_tag_test:
 		endif
 		;; keep searching...
 		jmp .loop
+
+;;
+;; quotes_test: check quotes candidates in xml file
+;;
+
+quotes_test:
+	ret
