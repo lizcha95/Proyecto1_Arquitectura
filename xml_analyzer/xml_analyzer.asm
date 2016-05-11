@@ -37,6 +37,8 @@ section .data
 		.len: equ $-error1_test1
 	error2_test1: db 'Error: falta > después de < en '
 		.len: equ $-error2_test1
+	test1_end: db 'La verificación de tags individuales en xml ha finalizado.', 10
+		.len: equ $-test1_end
 
 ;; **********************************************************************
 ;; section containing non initialized data
@@ -175,6 +177,8 @@ individual_tag_test:
 		inc r8
 		cmp r8, MAX_FILE_SZ
 		if e
+			;; write end message
+			write test1_end, test1_end.len
 			;; end test
 			ret
 		endif
