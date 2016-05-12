@@ -25,7 +25,7 @@
 
 section .data
 	;; numeric constants
-	MAX_FILE_SZ equ 792 ; 4256
+	MAX_FILE_SZ equ 800 ; 4256
 	;; two dots
 	DOTS db ':'
 	;; new line
@@ -39,6 +39,13 @@ section .data
 		.len: equ $-error2_test1
 	test1_end: db 'La verificación de tags individuales en xml ha finalizado.', 10
 		.len: equ $-test1_end
+	;; test2 strings
+	test2_init: db 'Ejecutando verificación de comillas en xml...', 10
+		.len: equ $-test2_init
+	error_test2: db 'Error: Ausencia de pareja de comillas en '
+		.len equ $-error_test2
+	test2_end: db 'La verificación de comillas en xml ha finalizado.', 10
+		.len: equ $-test2_end
 
 ;; **********************************************************************
 ;; section containing non initialized data
@@ -61,11 +68,9 @@ _start:
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
 	run_test1:
-		;mov r8, 50
-		;call get_curr_col
-		;mov rax, r11
-		;call write_integer
 		call individual_tag_test
+	run_test2:
+		;call quotes_test
 	finish_analyzing:
 		exit
 
@@ -74,13 +79,13 @@ _start:
 ;; **********************************************************************
 
 ;;
-;; get_curr_line: get the current line where r8 buffer index is
+;; get_curr_line: get the current line where r12 buffer index is
 ;;				  r11 will contain the result
 ;;
 
 get_curr_line:
 	;; auxiliar buffer index
-	mov r10, r8
+	mov r10, r12
 	;; contain the number of new lines
 	mov r11, 1
 	.loop:
@@ -102,13 +107,13 @@ get_curr_line:
 		jmp .loop
 
 ;;
-;; get_curr_col: get the current column where r8 buffer index is
+;; get_curr_col: get the current column where r12 buffer index is
 ;;               r11 will have the result
 ;;
 
 get_curr_col:
 	;; auxiliar buffer index
-	mov r10, r8
+	mov r10, r12
 	;; contain the number of columns
 	mov r11, 1
 	.loop:
@@ -125,11 +130,11 @@ get_curr_col:
 		jmp .loop
 
 ;;
-;; write_integer: write on display the ascii representation of integer
+;; write_int: write on display the ascii representation of integer
 ;; params: rax is register with a number to be writed
 ;;
 
-write_integer:
+write_int:
 	;; save stack pointer
 	mov r15, rsp
     ;; number counter
@@ -197,14 +202,17 @@ individual_tag_test:
 		else
 			cmp byte [file_to_parse+r8], '>'
 			if e
+				;; save index of error
+				mov r12, r8
+				;; write error
 				write error1_test1, error1_test1.len
 				call get_curr_line
 				mov rax, r11
-				call write_integer
+				call write_int
 				write DOTS, 1
 				call get_curr_col
 				mov rax, r11
-				call write_integer
+				call write_int
 				write NEW_LINE, 1
 			endif
 		endif
@@ -215,17 +223,20 @@ individual_tag_test:
 		if e
 			;; turn off check_tag_candidate
 			mov r9, 0
+			;; save index of possible error
+			mov r12, r8
 		else
 			cmp byte [file_to_parse+r8], '<'
 			if e
+				;; write error
 				write error2_test1, error2_test1.len
 				call get_curr_line
 				mov rax, r11
-				call write_integer
+				call write_int
 				write DOTS, 1
 				call get_curr_col
 				mov rax, r11
-				call write_integer
+				call write_int
 				write NEW_LINE, 1
 			endif
 		endif
@@ -237,4 +248,25 @@ individual_tag_test:
 ;;
 
 quotes_test:
-	ret
+	;; write init message
+	write test2_init, test2_init.len
+	;; buffer index
+	mov r8, -1
+	.loop:
+		;; increment and compare
+		inc r8
+		cmp r8, MAX_FILE_SZ
+		if e
+			;; write end message
+			write test2_end, test2_end.len
+			;; end test
+			ret
+		endif
+	.search_quote_candidate:
+		;; compare current char against "
+		cmp byte [file_to_parse+r8], '"'
+		if e
+
+		endif
+		;; keep searching...
+		jmp .loop
