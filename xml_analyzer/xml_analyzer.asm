@@ -266,7 +266,7 @@ quotes_test:
 		;; compare current char against "
 		cmp byte [file_to_parse+r8], '"'
 		if e
-
+			;; call sub procedure with r8 index
 		endif
 		;; keep searching...
 		jmp .loop
