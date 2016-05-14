@@ -1,6 +1,8 @@
 ;; **********************************************************************
 ;; File: xml_analyzer.asm
-;; Authors: Elberth Adrián Garro Sanchez [2014088081]
+;; Authors: Liza Chaves Carranza [2013016573]
+;;			Marisol González Coto [2014160604]
+;;          Elberth Adrián Garro Sanchez [2014088081]
 ;; Utility: Analyzes XML Code
 ;; Built with NASM Linux 64 bits
 ;; Copyright 2016 TEC
@@ -40,12 +42,19 @@ section .data
 	test1_end: db 'La verificación de tags individuales en xml ha finalizado.', 10
 		.len: equ $-test1_end
 	;; test2 strings
-	test2_init: db 'Ejecutando verificación de comillas en xml...', 10
+	test2_init: db 'Ejecutando verificación de comillas dobles en xml...', 10
 		.len: equ $-test2_init
 	error_test2: db 'Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test2
-	test2_end: db 'La verificación de comillas en xml ha finalizado.', 10
+	test2_end: db 'La verificación de comillas dobles en xml ha finalizado.', 10
 		.len: equ $-test2_end
+	;; test3 strings
+	test3_init: db 'Ejecutando verificación de comillas simples en xml...', 10
+		.len: equ $-test3_init
+	error_test3: db 'Error: Ausencia de pareja de comillas en '
+		.len equ $-error_test3
+	test3_end: db 'La verificación de comillas simples en xml ha finalizado.', 10
+		.len: equ $-test3_end
 
 ;; **********************************************************************
 ;; section containing non initialized data
@@ -70,7 +79,9 @@ _start:
 	run_test1:
 		;call individual_tag_test
 	run_test2:
-		call quotes_test
+		;call complex_quotes_test
+	run_test3:
+		call simple_quotes_test
 	finish_analyzing:
 		exit
 
@@ -244,10 +255,10 @@ individual_tag_test:
 		jmp .loop
 
 ;;
-;; quotes_test: verify quotes candidates in xml file
+;; complex_quotes_test: verify quotes candidates in xml file
 ;;
 
-quotes_test:
+complex_quotes_test:
 	;; write init message
 	write test2_init, test2_init.len
 	;; buffer index
@@ -287,9 +298,9 @@ quotes_test:
 			;; turn off check_quote_candidate
 			mov r9, 0
 		else
-			;; test the byte on buffer against 'a'
+			;; test the byte on buffer against '-'
 			;; if char < 'a'
-			cmp byte [file_to_parse+r12], 'a'
+			cmp byte [file_to_parse+r12], 45
 			if b
 				;; write error
 				write error_test2, error_test2.len
@@ -308,6 +319,85 @@ quotes_test:
 				if a
 					;; write error
 					write error_test2, error_test2.len
+					call get_curr_line
+					mov rax, r11
+					call write_int
+					write DOTS, 1
+					call get_curr_col
+					mov rax, r11
+					call write_int
+					write NEW_LINE, 1
+				endif
+			endif
+		endif
+		;; keep searching...
+		jmp .loop
+
+;;
+;; simple_quotes_test: verify quotes candidates in xml file
+;;
+
+simple_quotes_test:
+	;; write init message
+	write test3_init, test3_init.len
+	;; buffer index
+	mov r12, -1
+	;; flag to check_quote_candidate
+	mov r9, 0
+	.loop:
+		;; increment and compare
+		inc r12
+		cmp r12, MAX_FILE_SZ
+		if e
+			;; write end message
+			write test3_end, test3_end.len
+			;; end test
+			ret
+		endif
+		;; goto search_quote or check_quote
+		cmp r9, 0
+		if e
+			jmp .search_quote_candidate
+		else
+			jmp .check_quote_candidate
+		endif
+	.search_quote_candidate:
+		;; compare current char against '
+		cmp byte [file_to_parse+r12], 39
+		if e
+			;; turn on check_quote_candidate
+			mov r9, 1
+		endif
+		;; keep searching...
+		jmp .loop
+	.check_quote_candidate:
+		;; compare current char against '
+		cmp byte [file_to_parse+r12], 39
+		if e
+			;; turn off check_quote_candidate
+			mov r9, 0
+		else
+			;; test the byte on buffer against '-'
+			;; if char < 'a'
+			cmp byte [file_to_parse+r12], 45
+			if b
+				;; write error
+				write error_test3, error_test3.len
+				call get_curr_line
+				mov rax, r11
+				call write_int
+				write DOTS, 1
+				call get_curr_col
+				mov rax, r11
+				call write_int
+				write NEW_LINE, 1
+			else
+				;; test the byte on buffer against 'z'
+				;; if char > 'z'
+				cmp byte [file_to_parse+r12], 'z'
+				if a
+					;; write error
+					write error_test3, error_test3.len
 					call get_curr_line
 					mov rax, r11
 					call write_int
