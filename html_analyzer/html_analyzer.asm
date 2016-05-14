@@ -1,18 +1,18 @@
 ;; **********************************************************************
-;; File: xml_analyzer.asm
+;; File: html_analyzer.asm
 ;; Authors: Liza Chaves Carranza [2013016573]
 ;;			Marisol González Coto [2014160604]
 ;;          Elberth Adrián Garro Sanchez [2014088081]
-;; Utility: Analyzes XML Code
+;; Utility: Analyzes HTML Code
 ;; Built with NASM Linux 64 bits
 ;; Copyright 2016 TEC
 ;;
 ;; Instructions for run this code:
 ;; Open Linux terminal
 ;; Locate the code with cd, in my case:
-;; cd '/media/psf/Home/Proyectos/NASM x64/Proyecto1_Arquitectura/xml_analyzer'
+;; cd '/media/psf/Home/Proyectos/NASM x64/Proyecto1_Arquitectura/html_analyzer'
 ;; then write make
-;; and finally write ./xml_analyzer < test.xml
+;; and finally write ./html_analyzer < test.html
 ;; **********************************************************************
 
 ;; **********************************************************************
@@ -33,27 +33,27 @@ section .data
 	;; new line
 	NEW_LINE db 10
 	;; test1 strings
-	test1_init: db 'Ejecutando verificación de tags individuales en xml...', 10
+	test1_init: db 'Ejecutando verificación de tags individuales en html...', 10
 		.len: equ $-test1_init
 	error1_test1: db 'Error: falta < antes de > en '
 		.len: equ $-error1_test1
 	error2_test1: db 'Error: falta > después de < en '
 		.len: equ $-error2_test1
-	test1_end: db 'La verificación de tags individuales en xml ha finalizado.', 10
+	test1_end: db 'La verificación de tags individuales en html ha finalizado.', 10
 		.len: equ $-test1_end
 	;; test2 strings
-	test2_init: db 'Ejecutando verificación de comillas dobles en xml...', 10
+	test2_init: db 'Ejecutando verificación de comillas dobles en html...', 10
 		.len: equ $-test2_init
 	error_test2: db 'Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test2
-	test2_end: db 'La verificación de comillas dobles en xml ha finalizado.', 10
+	test2_end: db 'La verificación de comillas dobles en html ha finalizado.', 10
 		.len: equ $-test2_end
 	;; test3 strings
-	test3_init: db 'Ejecutando verificación de comillas simples en xml...', 10
+	test3_init: db 'Ejecutando verificación de comillas simples en html...', 10
 		.len: equ $-test3_init
 	error_test3: db 'Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test3
-	test3_end: db 'La verificación de comillas simples en xml ha finalizado.', 10
+	test3_end: db 'La verificación de comillas simples en html ha finalizado.', 10
 		.len: equ $-test3_end
 
 ;; **********************************************************************
@@ -178,7 +178,7 @@ write_int:
 		ret
 
 ;;
-;; individual_tag_test: check individual tags candidates in xml file
+;; individual_tag_test: check individual tags candidates in html file
 ;;
 
 individual_tag_test:
@@ -255,7 +255,7 @@ individual_tag_test:
 		jmp .loop
 
 ;;
-;; complex_quotes_test: verify quotes candidates in xml file
+;; complex_quotes_test: verify quotes candidates in html file
 ;;
 
 complex_quotes_test:
@@ -334,7 +334,7 @@ complex_quotes_test:
 		jmp .loop
 
 ;;
-;; simple_quotes_test: verify quotes candidates in xml file
+;; simple_quotes_test: verify quotes candidates in html file
 ;;
 
 simple_quotes_test:
