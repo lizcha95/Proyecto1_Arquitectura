@@ -68,9 +68,9 @@ _start:
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
 	run_test1:
-		;call individual_tag_test
+		call individual_tag_test
 	run_test2:
-		call quotes_test
+		;call quotes_test
 	finish_analyzing:
 		exit
 
@@ -244,80 +244,29 @@ individual_tag_test:
 		jmp .loop
 
 ;;
-;; quotes_test: verify quotes candidates in xml file
+;; quotes_test: check quotes candidates in xml file
 ;;
 
 quotes_test:
 	;; write init message
 	write test2_init, test2_init.len
 	;; buffer index
-	mov r12, -1
-	;; flag to check_quote_candidate
-	mov r9, 0
+	mov r8, -1
 	.loop:
 		;; increment and compare
-		inc r12
-		cmp r12, MAX_FILE_SZ
+		inc r8
+		cmp r8, MAX_FILE_SZ
 		if e
 			;; write end message
 			write test2_end, test2_end.len
 			;; end test
 			ret
 		endif
-		;; goto search_quote or check_quote
-		cmp r9, 0
-		if e
-			jmp .search_quote_candidate
-		else
-			jmp .check_quote_candidate
-		endif
 	.search_quote_candidate:
 		;; compare current char against "
-		cmp byte [file_to_parse+r12], '"'
+		cmp byte [file_to_parse+r8], '"'
 		if e
-			;; turn on check_quote_candidate
-			mov r9, 1
-		endif
-		;; keep searching...
-		jmp .loop
-	.check_quote_candidate:
-		;; compare current char against "
-		cmp byte [file_to_parse+r12], '"'
-		if e
-			;; turn off check_quote_candidate
-			mov r9, 0
-		else
-			;; test the byte on buffer against 'a'
-			;; if char < 'a'
-			cmp byte [file_to_parse+r12], 'a'
-			if b
-				;; write error
-				write error_test2, error_test2.len
-				call get_curr_line
-				mov rax, r11
-				call write_int
-				write DOTS, 1
-				call get_curr_col
-				mov rax, r11
-				call write_int
-				write NEW_LINE, 1
-			else
-				;; test the byte on buffer against 'z'
-				;; if char > 'z'
-				cmp byte [file_to_parse+r12], 'z'
-				if a
-					;; write error
-					write error_test2, error_test2.len
-					call get_curr_line
-					mov rax, r11
-					call write_int
-					write DOTS, 1
-					call get_curr_col
-					mov rax, r11
-					call write_int
-					write NEW_LINE, 1
-				endif
-			endif
+			;; call sub procedure with r8 index
 		endif
 		;; keep searching...
 		jmp .loop
