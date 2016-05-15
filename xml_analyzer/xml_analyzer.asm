@@ -27,7 +27,7 @@
 
 section .data
 	;; numeric constants
-	MAX_FILE_SZ equ 4256
+	MAX_FILE_SZ equ 4000
 	;; two dots
 	DOTS db ':'
 	;; new line
@@ -55,6 +55,12 @@ section .data
 		.len equ $-error_test3
 	test3_end: db 'La verificación de comillas simples en xml ha finalizado.', 10
 		.len: equ $-test3_end
+	;; test4 strings
+	test4_init: db 'Ejecutando verificación de tags anidados xml...', 10
+		.len: equ $-test4_init
+
+	test4_end: db 'La verificación de tags anidados en xml ha finalizado.', 10
+		.len: equ $-test4_end
 
 ;; **********************************************************************
 ;; section containing non initialized data
@@ -63,6 +69,7 @@ section .data
 section .bss
 	in_file resb MAX_FILE_SZ
 	file_to_parse resb MAX_FILE_SZ
+	open_tag_content resb MAX_FILE_SZ
 	out_file resb MAX_FILE_SZ
 
 ;; **********************************************************************
@@ -77,11 +84,13 @@ _start:
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
 	run_test1:
-		call individual_tag_test
+		;call individual_tag_test
 	run_test2:
 		;call complex_quotes_test
 	run_test3:
 		;call simple_quotes_test
+	run_test4:
+		; call nested_tags_test
 	finish_analyzing:
 		exit
 
@@ -410,4 +419,53 @@ simple_quotes_test:
 			endif
 		endif
 		;; keep searching...
+		jmp .loop
+
+save_tag_content:
+	;; clean open_tag_content
+	clean_buffer open_tag_content
+	;; copy '<' pos into r9
+	mov r9, r8
+	;; move r9 to '/'
+	inc r9
+	;; prepare aux index
+	mov r10, -1
+	.loop:
+		;; move r9 to next char
+		inc r9
+		;; increment r10 index
+		inc r10
+		;; save tag content in open_tag_content until find '>' char
+		cmp r9, '>'
+		if ne
+			;; copy current char in open_tag_content
+			mov byte [open_tag_content+r10], [file_to_parse+r9]
+			jmp .loop
+		else
+			ret
+		endif
+
+nested_tags_test:
+	;; write init message
+	write test4_init, test4_init.len
+	;; buffer index
+	mov r8, -1
+	.loop:
+		;; increment and compare
+		inc r8
+		cmp r8, MAX_FILE_SZ
+		if e
+			;; write end message
+			write test4_end, test4_end.len
+			;; end test
+			ret
+		endif
+	.search_tag_candidate:
+		cmp byte [file_to_parse+r8], '<'
+		if e
+			cmp byte [file_to_parse+r8+1], '/'
+			if ne
+				call save_tag_content
+			endif
+		endif
 		jmp .loop
