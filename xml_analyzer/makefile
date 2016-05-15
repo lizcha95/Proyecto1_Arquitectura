@@ -12,7 +12,7 @@ ASM_F=-f elf64
 LINKER=ld
 #link executable
 xml_analyzer: xml_analyzer.o
-	$(LINKER) -o xml_analyzer xml_analyzer.o
+	@$(LINKER) -o xml_analyzer xml_analyzer.o
 #assemble source code
 xml_analyzer.o: xml_analyzer.asm
-	$(ASM) $(ASM_F) -o xml_analyzer.o xml_analyzer.asm
+	@$(ASM) $(ASM_F) -o xml_analyzer.o xml_analyzer.asm

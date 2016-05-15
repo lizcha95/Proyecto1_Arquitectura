@@ -91,13 +91,13 @@ _start:
 	start_tests:
 		write greeting, greeting.len
 		.run_test1:
-			call individual_tag_test
+			;call individual_tag_test
 		.run_test2:
-			call double_quotes_test
+			;call double_quotes_test
 		.run_test3:
-			call single_quotes_test
+			;call single_quotes_test
 		.run_test4:
-			;call nested_tag_test
+			call nested_tag_test
 	end_analyzer:
 		exit
 
@@ -452,32 +452,43 @@ nested_tag_test:
 		;; goto search_tag or check_tag
 		cmp r9, 0
 		if e
-			jmp .search_tag_candidate
+			jmp .search_open_tag
 		else
-			jmp .check_tag_candidate
+			jmp .check_open_tag
 		endif
-	.search_tag_candidate:
+	.search_open_tag:
 		cmp byte [file_to_parse+r8], '<'
 		if e
-			;; turn on check_tag_candidate
-			mov r9, 1
-		else
-			cmp byte [file_to_parse+r8], '>'
-			if e
-				;; write error
+			;; save < index pos in r12
+			mov r12, r8
+			cmp byte [file_to_parse+r12+1], '/'
+			if ne
+				;; turn on check_tag_candidate
+				mov r9, 1
 			endif
 		endif
 		;; keep searching...
 		jmp .loop
-	.check_tag_candidate:
-		cmp byte [file_to_parse+r8], '>'
+	.check_open_tag:
+		cmp byte [file_to_parse+r8], '<'
 		if e
-			;; turn off check_tag_candidate
+			;; turn off check_init_candidate
 			mov r9, 0
 		else
-			cmp byte [file_to_parse+r8], '<'
+			cmp byte [file_to_parse+r8], '>'
 			if e
-				;; write error
+				clean_buffer open_tag_content
+				mov r13, -1
+				.copy_open_tag:
+					inc r12
+					inc r13
+					mov dl, byte [file_to_parse+r12]
+					mov byte [open_tag_content+r13], dl
+					cmp r12, '>'
+					jne .copy_open_tag
+					write open_tag_content, 20
+					;; off check_open_tag
+					;; find end tag
 			endif
 		endif
 		;; keep searching...
