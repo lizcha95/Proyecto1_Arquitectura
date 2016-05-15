@@ -97,6 +97,26 @@
         %endrep
     %endmacro
     ;;
+    ;; equal_buffers: check if buffers content are equal
+    ;; Params: %1 is the first buffer address to compare
+    ;;         %2 is the second buffer address to compare
+    ;;         %3 register that will know if buffer 1 and buffer 2 are equal
+    ;;
+    %macro equal_buffers 3
+        ;; assume that buffers are equal
+        mov %3, 1
+        ;; for (int i=0; i<MAX_FILE_SZ; ++i)
+        %assign i 0
+        %rep MAX_FILE_SZ
+            mov byte[%1+i], dl
+            cmp dl, byte[%2+i]
+            if ne
+                mov %3, 0
+            endif
+        %assign i i+1
+        %endrep
+    %endmacro
+    ;;
     ;; to_lower: converts uppercase buffer's chars into lowercase
     ;; params: %1 is the buffer that will be transformed
     ;;

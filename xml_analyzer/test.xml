@@ -2,7 +2,7 @@
 <!DOCTYPE PARTS SYSTEM "parts.dtd">
 <?xml-stylesheet type="text/css" href="xmlpartsstyle.css"?>
 <PARTS>
-   <TITLEComputer Parts/TITLE>
+   <TITLE>Computer Parts</TITLE>
    <PART>
       <ITEM>Motherboard</ITEM>
       <MANUFACTURER>ASUS</MANUFACTURER>

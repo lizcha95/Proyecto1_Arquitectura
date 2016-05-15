@@ -32,6 +32,9 @@ section .data
 	DOTS db ':'
 	;; new line
 	NEW_LINE db 10
+	;; program greeting
+	greeting: db 10, 'Bievenido al analizador de archivos xml.', 10, 10
+		.len: equ $-greeting
 	;; test1 strings
 	test1_init: db 'Ejecutando verificación de tags individuales en xml...', 10
 		.len: equ $-test1_init
@@ -39,27 +42,28 @@ section .data
 		.len: equ $-error1_test1
 	error2_test1: db 'Error: falta > después de < en '
 		.len: equ $-error2_test1
-	test1_end: db 'La verificación de tags individuales en xml ha finalizado.', 10
+	test1_end: db 'La verificación de tags individuales en xml ha finalizado.', 10, 10
 		.len: equ $-test1_end
 	;; test2 strings
 	test2_init: db 'Ejecutando verificación de comillas dobles en xml...', 10
 		.len: equ $-test2_init
 	error_test2: db 'Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test2
-	test2_end: db 'La verificación de comillas dobles en xml ha finalizado.', 10
+	test2_end: db 'La verificación de comillas dobles en xml ha finalizado.', 10, 10
 		.len: equ $-test2_end
 	;; test3 strings
 	test3_init: db 'Ejecutando verificación de comillas simples en xml...', 10
 		.len: equ $-test3_init
 	error_test3: db 'Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test3
-	test3_end: db 'La verificación de comillas simples en xml ha finalizado.', 10
+	test3_end: db 'La verificación de comillas simples en xml ha finalizado.', 10, 10
 		.len: equ $-test3_end
 	;; test4 strings
 	test4_init: db 'Ejecutando verificación de tags anidados xml...', 10
 		.len: equ $-test4_init
-
-	test4_end: db 'La verificación de tags anidados en xml ha finalizado.', 10
+	error_test4: db 'Error: Tag no anidado en '
+		.len equ $-error_test4
+	test4_end: db 'La verificación de tags anidados en xml ha finalizado.', 10, 10
 		.len: equ $-test4_end
 
 ;; **********************************************************************
@@ -70,6 +74,7 @@ section .bss
 	in_file resb MAX_FILE_SZ
 	file_to_parse resb MAX_FILE_SZ
 	open_tag_content resb MAX_FILE_SZ
+	end_tag_content resb MAX_FILE_SZ
 	out_file resb MAX_FILE_SZ
 
 ;; **********************************************************************
@@ -83,15 +88,17 @@ _start:
 		read in_file, MAX_FILE_SZ
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
-	run_test1:
-		;call individual_tag_test
-	run_test2:
-		;call complex_quotes_test
-	run_test3:
-		;call simple_quotes_test
-	run_test4:
-		; call nested_tags_test
-	finish_analyzing:
+	start_tests:
+		write greeting, greeting.len
+		.run_test1:
+			call individual_tag_test
+		.run_test2:
+			call double_quotes_test
+		.run_test3:
+			call single_quotes_test
+		.run_test4:
+			;call nested_tag_test
+	end_analyzer:
 		exit
 
 ;; **********************************************************************
@@ -99,7 +106,7 @@ _start:
 ;; **********************************************************************
 
 ;;
-;; get_curr_line: get the current line where r12 buffer index is
+;; get_curr_line: get the current line where r8 buffer index is
 ;;				  r11 will contain the result
 ;;
 
@@ -127,7 +134,7 @@ get_curr_line:
 		jmp .loop
 
 ;;
-;; get_curr_col: get the current column where r12 buffer index is
+;; get_curr_col: get the current column where r8 buffer index is
 ;;               r11 will have the result
 ;;
 
@@ -267,7 +274,7 @@ individual_tag_test:
 ;; complex_quotes_test: verify quotes candidates in xml file
 ;;
 
-complex_quotes_test:
+double_quotes_test:
 	;; write init message
 	write test2_init, test2_init.len
 	;; buffer index
@@ -308,7 +315,7 @@ complex_quotes_test:
 			mov r9, 0
 		else
 			;; test the byte on buffer against '-'
-			;; if char < 'a'
+			;; if char < '-'
 			cmp byte [file_to_parse+r8], 45
 			if b
 				;; write error
@@ -346,7 +353,7 @@ complex_quotes_test:
 ;; simple_quotes_test: verify quotes candidates in xml file
 ;;
 
-simple_quotes_test:
+single_quotes_test:
 	;; write init message
 	write test3_init, test3_init.len
 	;; buffer index
@@ -387,7 +394,7 @@ simple_quotes_test:
 			mov r9, 0
 		else
 			;; test the byte on buffer against '-'
-			;; if char < 'a'
+			;; if char < '-'
 			cmp byte [file_to_parse+r8], 45
 			if b
 				;; write error
@@ -421,35 +428,17 @@ simple_quotes_test:
 		;; keep searching...
 		jmp .loop
 
-save_tag_content:
-	;; clean open_tag_content
-	clean_buffer open_tag_content
-	;; copy '<' pos into r9
-	mov r9, r8
-	;; move r9 to '/'
-	inc r9
-	;; prepare aux index
-	mov r10, -1
-	.loop:
-		;; move r9 to next char
-		inc r9
-		;; increment r10 index
-		inc r10
-		;; save tag content in open_tag_content until find '>' char
-		cmp r9, '>'
-		if ne
-			;; copy current char in open_tag_content
-			mov byte [open_tag_content+r10], [file_to_parse+r9]
-			jmp .loop
-		else
-			ret
-		endif
+;;
+;; nested_tag_test: verify nested tags in xml file
+;;
 
-nested_tags_test:
+nested_tag_test:
 	;; write init message
 	write test4_init, test4_init.len
 	;; buffer index
 	mov r8, -1
+	;; flag to check_tag_candidate
+	mov r9, 0
 	.loop:
 		;; increment and compare
 		inc r8
@@ -460,12 +449,36 @@ nested_tags_test:
 			;; end test
 			ret
 		endif
+		;; goto search_tag or check_tag
+		cmp r9, 0
+		if e
+			jmp .search_tag_candidate
+		else
+			jmp .check_tag_candidate
+		endif
 	.search_tag_candidate:
 		cmp byte [file_to_parse+r8], '<'
 		if e
-			cmp byte [file_to_parse+r8+1], '/'
-			if ne
-				call save_tag_content
+			;; turn on check_tag_candidate
+			mov r9, 1
+		else
+			cmp byte [file_to_parse+r8], '>'
+			if e
+				;; write error
 			endif
 		endif
+		;; keep searching...
+		jmp .loop
+	.check_tag_candidate:
+		cmp byte [file_to_parse+r8], '>'
+		if e
+			;; turn off check_tag_candidate
+			mov r9, 0
+		else
+			cmp byte [file_to_parse+r8], '<'
+			if e
+				;; write error
+			endif
+		endif
+		;; keep searching...
 		jmp .loop
