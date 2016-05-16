@@ -543,7 +543,7 @@ aux_nested_tag_test:
 		;; increment and compare
 		inc r8
 		cmp r8, MAX_FILE_SZ
-		if e
+		if ge
 			;; restore registers
 			pop r13
 			pop r12
@@ -573,13 +573,10 @@ aux_nested_tag_test:
 		if e
 			;; save < index pos in r12
 			mov r12, r8
-			;; move r12 to possible '/'
+			;; move r12 to possible '/' or first tag char
 			inc r12
-			;; check r12 index content
-			cmp byte [file_to_parse+r12], '/'
-			if e
-				mov r9, 1
-			endif
+			;; turn on check_end_tag
+			mov r9, 1
 		endif
 		;; keep searching...
 		jmp .loop
@@ -593,7 +590,13 @@ aux_nested_tag_test:
 			cmp byte [file_to_parse+r8], '>'
 			if e
 				clean_buffer end_tag_content
-				inc r12
+				cmp byte [file_to_parse+r12], '/'
+				if e
+					mov r14, r12
+					inc r12
+				else
+					 mov r14, 0
+				endif
 				mov r13, 0
 				.copy_end_tag:
 					mov dl, byte [file_to_parse+r12]
@@ -605,19 +608,18 @@ aux_nested_tag_test:
 					equal_buffers open_tag_content, end_tag_content, rax
 					cmp rax, 1
 					if e
-						;; restore registers
-						pop r13
-						pop r12
-						pop r9
-						pop r8
-						;; debug
-						;; write NEW_LINE, 1
-						;; write open_tag_content, 20
-						;; write NEW_LINE, 1
-						;; write end_tag_content, 20
-						;; write NEW_LINE, 1
-						;; end proc
-						ret
+						cmp r14, 0
+						if e
+							mov r8, MAX_FILE_SZ
+						else
+							;; restore registers
+							pop r13
+							pop r12
+							pop r9
+							pop r8
+							;; end proc
+							ret
+						endif
 					endif
 			endif
 		endif
