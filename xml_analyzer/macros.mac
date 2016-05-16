@@ -1,10 +1,10 @@
-;; ******************************************
+;; *****************************************************
 ;; File: macros.mac
 ;; Authors: Elberth Adrian Garro Sanchez [2014088081]
 ;; Utility: Simple Macros for NASM
 ;; Built with NASM Linux 64 bits
 ;; Copyright 2016 TEC
-;; ******************************************
+;; *****************************************************
 
 %ifndef MACROS_MAC
     %define MACROS_MAC

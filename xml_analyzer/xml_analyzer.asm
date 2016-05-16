@@ -449,7 +449,7 @@ nested_tag_test:
 			;; end test
 			ret
 		endif
-		;; goto search_tag or check_tag
+		;; goto search_open_tag or check_open_tag
 		cmp r9, 0
 		if e
 			jmp .search_open_tag
@@ -461,10 +461,25 @@ nested_tag_test:
 		if e
 			;; save < index pos in r12
 			mov r12, r8
-			cmp byte [file_to_parse+r12+1], '/'
-			if ne
-				;; turn on check_tag_candidate
-				mov r9, 1
+			;; move r12 to possible '/', '!', or '?'
+			inc r12
+			;; check r12 index content
+			cmp byte [file_to_parse+r12], '/'
+			if e
+				nop
+			else
+				cmp byte [file_to_parse+r12], '!'
+				if e
+					nop
+				else
+					cmp byte [file_to_parse+r12], '?'
+					if e
+						nop
+					else
+						;; turn on check_open_tag
+						mov r9, 1
+					endif
+				endif
 			endif
 		endif
 		;; keep searching...
@@ -478,17 +493,19 @@ nested_tag_test:
 			cmp byte [file_to_parse+r8], '>'
 			if e
 				clean_buffer open_tag_content
-				mov r13, -1
+				mov r13, 0
 				.copy_open_tag:
-					inc r12
-					inc r13
 					mov dl, byte [file_to_parse+r12]
 					mov byte [open_tag_content+r13], dl
-					cmp r12, '>'
+					inc r12
+					inc r13
+					cmp byte [file_to_parse+r12], '>'
 					jne .copy_open_tag
-					write open_tag_content, 20
-					;; off check_open_tag
-					;; find end tag
+					write open_tag_content, 50
+					write NEW_LINE, 1
+					ret
+					;; turn on search_end_tag
+					mov r9, 0
 			endif
 		endif
 		;; keep searching...
