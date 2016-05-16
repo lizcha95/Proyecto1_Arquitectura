@@ -110,11 +110,11 @@ _start:
 	start_tests:
 		write greeting, greeting.len
 		.run_test1:
-			;call individual_tag_test
+			call individual_tag_test
 		.run_test2:
-			;call double_quotes_test
+			call double_quotes_test
 		.run_test3:
-			;call single_quotes_test
+			call single_quotes_test
 		.run_test4:
 			call nested_tag_test
 		.run_test5:
