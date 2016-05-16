@@ -116,9 +116,11 @@ _start:
 		.run_test3:
 			;call single_quotes_test
 		.run_test4:
-			call nested_tag_test
+			;call nested_tag_test
 		.run_test5:
 			;call comment_tag_test
+		.run_test6:
+			;call head_body_test
 	end_analyzer:
 		write end_msg, end_msg.len
 		exit
@@ -744,3 +746,5 @@ comment_tag_test:
 			endif
 			;; keep searching...
 			jmp .loop
+
+head_body_test:
