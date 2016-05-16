@@ -38,30 +38,30 @@ section .data
 	;; test1 strings
 	test1_init: db 'Ejecutando verificación de tags individuales en xml...', 10
 		.len: equ $-test1_init
-	error1_test1: db '  Error: falta < antes de > en '
+	error1_test1: db ' Error: falta < antes de > en '
 		.len: equ $-error1_test1
-	error2_test1: db '  Error: falta > después de < en '
+	error2_test1: db ' Error: falta > después de < en '
 		.len: equ $-error2_test1
 	test1_end: db 'La verificación de tags individuales en xml ha finalizado.', 10, 10
 		.len: equ $-test1_end
 	;; test2 strings
 	test2_init: db 'Ejecutando verificación de comillas dobles en xml...', 10
 		.len: equ $-test2_init
-	error_test2: db '  Error: Ausencia de pareja de comillas en '
+	error_test2: db ' Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test2
 	test2_end: db 'La verificación de comillas dobles en xml ha finalizado.', 10, 10
 		.len: equ $-test2_end
 	;; test3 strings
 	test3_init: db 'Ejecutando verificación de comillas simples en xml...', 10
 		.len: equ $-test3_init
-	error_test3: db '  Error: Ausencia de pareja de comillas en '
+	error_test3: db ' Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test3
 	test3_end: db 'La verificación de comillas simples en xml ha finalizado.', 10, 10
 		.len: equ $-test3_end
 	;; test4 strings
 	test4_init: db 'Ejecutando verificación de tags anidados xml...', 10
 		.len: equ $-test4_init
-	error_test4: db '  Error: Tag no anidado en '
+	error_test4: db ' Error: Tag no anidado en '
 		.len equ $-error_test4
 	test4_end: db 'La verificación de tags anidados en xml ha finalizado.', 10, 10
 		.len: equ $-test4_end
@@ -593,6 +593,12 @@ aux_nested_tag_test:
 						pop r12
 						pop r9
 						pop r8
+						;; debug
+						;;write NEW_LINE, 1
+						;;write open_tag_content, 20
+						;;write NEW_LINE, 1
+						;;write end_tag_content, 20
+						;;write NEW_LINE, 1
 						;; end proc
 						ret
 					endif

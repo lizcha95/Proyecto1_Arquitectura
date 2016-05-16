@@ -108,8 +108,8 @@
         ;; for (int i=0; i<MAX_FILE_SZ; ++i)
         %assign i 0
         %rep MAX_FILE_SZ
-            mov byte[%1+i], dl
-            cmp dl, byte[%2+i]
+            mov dl, byte[%1+i]
+            cmp byte[%2+i], dl
             if ne
                 mov %3, 0
             endif
