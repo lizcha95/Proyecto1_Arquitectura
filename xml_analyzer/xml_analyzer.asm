@@ -591,6 +591,8 @@ aux_nested_tag_test:
 			if e
 				clean_buffer end_tag_content
 				cmp byte [file_to_parse+r12], '/'
+				;; move r12 to first tag char
+				;; and save in r14 if have tag have / inside
 				if e
 					mov r14, r12
 					inc r12
