@@ -35,7 +35,7 @@ section .data
 	;; program greeting
 	greeting: db 10, 'Bienvenido al analizador de archivos xml.', 10, 10
 		.len: equ $-greeting
-	;; test1 strings
+	;; test1 individual tags
 	test1_init: db 'Ejecutando verificación de tags individuales en xml...', 10
 		.len: equ $-test1_init
 	error1_test1: db ' Error: falta < antes de > en '
@@ -44,29 +44,46 @@ section .data
 		.len: equ $-error2_test1
 	test1_end: db 'La verificación de tags individuales en xml ha finalizado.', 10, 10
 		.len: equ $-test1_end
-	;; test2 strings
+	;; test2 double quotes
 	test2_init: db 'Ejecutando verificación de comillas dobles en xml...', 10
 		.len: equ $-test2_init
 	error_test2: db ' Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test2
 	test2_end: db 'La verificación de comillas dobles en xml ha finalizado.', 10, 10
 		.len: equ $-test2_end
-	;; test3 strings
+	;; test3 simple quotes
 	test3_init: db 'Ejecutando verificación de comillas simples en xml...', 10
 		.len: equ $-test3_init
 	error_test3: db ' Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test3
 	test3_end: db 'La verificación de comillas simples en xml ha finalizado.', 10, 10
 		.len: equ $-test3_end
-	;; test4 strings
+	;; test4 nested tags
 	test4_init: db 'Ejecutando verificación de tags anidados xml...', 10
 		.len: equ $-test4_init
 	error_test4: db ' Error: Tag no anidado en '
 		.len equ $-error_test4
 	test4_end: db 'La verificación de tags anidados en xml ha finalizado.', 10, 10
 		.len: equ $-test4_end
+	;; test5 comments
+	test5_init: db 'Ejecutando verificación de comentarios en xml...', 10
+		.len: equ $-test5_init
+	error1_test5: db 'Error: falta < antes de > en '
+		.len: equ $-error1_test5
+	error2_test5: db 'Error: comentario mal formado. Falta - después de ! en '
+		.len: equ $-error2_test5
+	error3_test5: db 'Error: comentario mal formado. Falta - después de - en '
+		.len: equ $-error3_test5
+	error4_test5: db 'Error: comentario mal formado. Falta > después de -- en '
+		.len: equ $-error4_test5
+	error5_test5: db 'Error: comentario mal formado. Se encontró < en vez de - en '
+		.len: equ $-error5_test5
+	error6_test5: db 'Error: comentario mal formado. No se encontró --> en '
+		.len: equ $-error6_test5
+	test5_end: db 'La verificación de comentarios en xml ha finalizado.', 10, 10
+		.len: equ $-test5_end
 	;; end string
-	end_msg: db 10, 'El análisis del archivo xml ha terminado.', 10, 10
+	end_msg: db 'El análisis del archivo xml ha terminado.', 10, 10
 		.len: equ $-end_msg
 ;; **********************************************************************
 ;; section containing non initialized data
@@ -100,6 +117,8 @@ _start:
 			;call single_quotes_test
 		.run_test4:
 			call nested_tag_test
+		.run_test5:
+			;call comment_tag_test
 	end_analyzer:
 		write end_msg, end_msg.len
 		exit
@@ -518,8 +537,6 @@ aux_nested_tag_test:
 	push r9
 	push r12
 	push r13
-	;; buffer index
-	mov r8, -1
 	;; flag to check_tag
 	mov r9, 0
 	.loop:
@@ -594,11 +611,11 @@ aux_nested_tag_test:
 						pop r9
 						pop r8
 						;; debug
-						;;write NEW_LINE, 1
-						;;write open_tag_content, 20
-						;;write NEW_LINE, 1
-						;;write end_tag_content, 20
-						;;write NEW_LINE, 1
+						;; write NEW_LINE, 1
+						;; write open_tag_content, 20
+						;; write NEW_LINE, 1
+						;; write end_tag_content, 20
+						;; write NEW_LINE, 1
 						;; end proc
 						ret
 					endif
@@ -606,3 +623,120 @@ aux_nested_tag_test:
 		endif
 		;; keep searching...
 		jmp .loop
+
+;;
+;; comment_tag_test: ignore comment tags
+;;
+
+comment_tag_test:
+	;; write init message
+	write test4_init, test4_init.len
+	;; buffer index
+	mov r8, -1
+	;; flag to check_tag_candidate
+	mov r9, 0
+	.loop:
+		;; increment and compare with file ending
+		inc r8
+		cmp r8, MAX_FILE_SZ
+		if e
+			;; write end message
+			write test5_end, test5_end.len
+			;; end test
+			ret
+		endif
+		;; goto search_tag or check_tag
+		cmp r9, 0
+		if e
+			jmp .search_comment_candidate
+		else
+			jmp .check_comment_candidate
+		endif
+		.search_comment_candidate:
+			cmp byte [file_to_parse+r8], '<'
+			if e
+				cmp byte [file_to_parse+r8+1], '!'
+				if e
+					cmp byte [file_to_parse+r8+2], '-'
+					if e
+						cmp byte [file_to_parse+r8+3], '-'
+						if e
+							add r8, 3
+							;; turn on check_tag_candidate
+							mov r9, 1
+						else
+							;; Error if comment is not well formed
+							write error3_test5, error3_test5.len
+							call get_curr_line
+							mov rax, r11
+							call write_int
+							write DOTS, 1
+							call get_curr_col
+							mov rax, r11
+							call write_int
+							write NEW_LINE, 1
+						endif
+					else
+						cmp byte [file_to_parse+r8+2], 'D'
+						if e
+							add r8, 2
+							jmp .loop
+						else
+							;; Error if comment is not well formed
+							write error2_test5, error2_test5.len
+							call get_curr_line
+							mov rax, r11
+							call write_int
+							write DOTS, 1
+							call get_curr_col
+							mov rax, r11
+							call write_int
+							write NEW_LINE, 1
+						endif
+					endif
+				else
+					jmp .loop
+				endif
+			else
+				;; TODO verificar la parte de doctype
+				cmp byte [file_to_parse+r8], '>'
+				if e
+					jmp .loop
+				endif
+			endif
+			;; keep searching...
+			jmp .loop
+
+		.check_comment_candidate:
+
+			cmp byte [file_to_parse+r8], '-'
+			if e
+				cmp byte [file_to_parse+r8+1], '-'
+				if e
+					cmp byte [file_to_parse+r8+2], '>'
+					if e
+						add r8, 2
+						;; turn off check_tag_candidate
+						mov r9, 0
+					else
+						cmp byte [file_to_parse+r8+2], '<'
+
+						;; write error
+						write error4_test5, error4_test5.len
+						call get_curr_line
+						mov rax, r11
+						call write_int
+						write DOTS, 1
+						call get_curr_col
+						mov rax, r11
+						call write_int
+						write NEW_LINE, 1
+					endif
+				else
+					jmp .loop
+				endif
+			else
+				jmp .loop
+			endif
+			;; keep searching...
+			jmp .loop
