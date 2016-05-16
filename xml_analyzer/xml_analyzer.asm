@@ -33,7 +33,7 @@ section .data
 	;; new line
 	NEW_LINE db 10
 	;; program greeting
-	greeting: db 10, 'Bievenido al analizador de archivos xml.', 10, 10
+	greeting: db 10, 'Bienvenido al analizador de archivos xml.', 10, 10
 		.len: equ $-greeting
 	;; test1 strings
 	test1_init: db 'Ejecutando verificación de tags individuales en xml...', 10
@@ -65,7 +65,9 @@ section .data
 		.len equ $-error_test4
 	test4_end: db 'La verificación de tags anidados en xml ha finalizado.', 10, 10
 		.len: equ $-test4_end
-
+	;; end string
+	end_msg: db 10, 'El análisis del archivo xml ha terminado.', 10, 10
+		.len: equ $-end_msg
 ;; **********************************************************************
 ;; section containing non initialized data
 ;; **********************************************************************
@@ -97,8 +99,9 @@ _start:
 		.run_test3:
 			;call single_quotes_test
 		.run_test4:
-			call nested_tag_test
+			call open_tag_test
 	end_analyzer:
+		write end_msg, end_msg.len
 		exit
 
 ;; **********************************************************************
@@ -432,7 +435,7 @@ single_quotes_test:
 ;; nested_tag_test: verify nested tags in xml file
 ;;
 
-nested_tag_test:
+open_tag_test:
 	;; write init message
 	write test4_init, test4_init.len
 	;; buffer index
@@ -449,23 +452,13 @@ nested_tag_test:
 			;; end test
 			ret
 		endif
-		;; goto search_open_tag, check_open_tag, search_end_tag, or check_end_tag
+		;; goto search_open_tag or check_open_tag
 		cmp r9, 0
 		if e
 			jmp .search_open_tag
-		endif
-        cmp r9, 1
-        if e
+		else
 			jmp .check_open_tag
 		endif
-        cmp r9, 2
-        if e
-            jmp .search_end_tag
-        endif
-        cmp r9, 3
-        if e
-            jmp .check_end_tag
-        endif
 	.search_open_tag:
 		cmp byte [file_to_parse+r8], '<'
 		if e
@@ -497,7 +490,7 @@ nested_tag_test:
 	.check_open_tag:
 		cmp byte [file_to_parse+r8], '<'
 		if e
-			;; turn off check_init_candidate
+			;; turn off check_open_tag
 			mov r9, 0
 		else
 			cmp byte [file_to_parse+r8], '>'
@@ -511,18 +504,10 @@ nested_tag_test:
 					inc r13
 					cmp byte [file_to_parse+r12], '>'
 					jne .copy_open_tag
+					;; debug
 					write open_tag_content, 50
 					write NEW_LINE, 1
-					ret
-					;; turn on search_end_tag
-					mov r9, 0
 			endif
 		endif
 		;; keep searching...
 		jmp .loop
-    .search_end_tag:
-        ;; keep searching...
-        jmp .loop
-    .check_end_tag:
-        ;; keep searching...
-        jmp .loop
