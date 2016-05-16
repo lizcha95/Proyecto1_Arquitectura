@@ -449,13 +449,23 @@ nested_tag_test:
 			;; end test
 			ret
 		endif
-		;; goto search_open_tag or check_open_tag
+		;; goto search_open_tag, check_open_tag, search_end_tag, or check_end_tag
 		cmp r9, 0
 		if e
 			jmp .search_open_tag
-		else
+		endif
+        cmp r9, 1
+        if e
 			jmp .check_open_tag
 		endif
+        cmp r9, 2
+        if e
+            jmp .search_end_tag
+        endif
+        cmp r9, 3
+        if e
+            jmp .check_end_tag
+        endif
 	.search_open_tag:
 		cmp byte [file_to_parse+r8], '<'
 		if e
@@ -510,3 +520,9 @@ nested_tag_test:
 		endif
 		;; keep searching...
 		jmp .loop
+    .search_end_tag:
+        ;; keep searching...
+        jmp .loop
+    .check_end_tag:
+        ;; keep searching...
+        jmp .loop
