@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE PARTS SYSTEM "parts.dtd">
+<!-- <!DOCTYPE PARTS SYSTEM "parts.dtd"> TODO: verificar Doctype para comentarios -->
 <?xml-stylesheet type="text/css" href="xmlpartsstyle.css"?>
 <PARTS>
    <TITLE>Computer Parts</TITLE>
