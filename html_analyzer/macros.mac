@@ -1,10 +1,10 @@
-;; ******************************************
+;; *****************************************************
 ;; File: macros.mac
 ;; Authors: Elberth Adrian Garro Sanchez [2014088081]
 ;; Utility: Simple Macros for NASM
 ;; Built with NASM Linux 64 bits
 ;; Copyright 2016 TEC
-;; ******************************************
+;; *****************************************************
 
 %ifndef MACROS_MAC
     %define MACROS_MAC
@@ -84,6 +84,38 @@
 		%assign i i+1
 		%endrep
 	%endmacro
+    ;;
+    ;; clean_buffer: clean buffer with null chars
+    ;; Params: %1 is the buffer address
+    ;;
+    %macro clean_buffer 1
+        ;; for (int i=0; i<MAX_FILE_SZ; ++i)
+        %assign i 0
+        %rep MAX_FILE_SZ
+            mov byte[%1+i], 0
+        %assign i i+1
+        %endrep
+    %endmacro
+    ;;
+    ;; equal_buffers: check if buffers content are equal
+    ;; Params: %1 is the first buffer address to compare
+    ;;         %2 is the second buffer address to compare
+    ;;         %3 register that will know if buffer 1 and buffer 2 are equal
+    ;;
+    %macro equal_buffers 3
+        ;; assume that buffers are equal
+        mov %3, 1
+        ;; for (int i=0; i<MAX_FILE_SZ; ++i)
+        %assign i 0
+        %rep MAX_FILE_SZ
+            mov dl, byte[%1+i]
+            cmp byte[%2+i], dl
+            if ne
+                mov %3, 0
+            endif
+        %assign i i+1
+        %endrep
+    %endmacro
     ;;
     ;; to_lower: converts uppercase buffer's chars into lowercase
     ;; params: %1 is the buffer that will be transformed

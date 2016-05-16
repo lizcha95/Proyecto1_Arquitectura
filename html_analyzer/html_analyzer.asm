@@ -3,7 +3,7 @@
 ;; Authors: Liza Chaves Carranza [2013016573]
 ;;			Marisol González Coto [2014160604]
 ;;          Elberth Adrián Garro Sanchez [2014088081]
-;; Utility: Analyzes HTML Code
+;; Utility: Analyzes html Code
 ;; Built with NASM Linux 64 bits
 ;; Copyright 2016 TEC
 ;;
@@ -27,35 +27,64 @@
 
 section .data
 	;; numeric constants
-	MAX_FILE_SZ equ 4256
+	MAX_FILE_SZ equ 4000
 	;; two dots
 	DOTS db ':'
 	;; new line
 	NEW_LINE db 10
-	;; test1 strings
+	;; program greeting
+	greeting: db 10, 'Bienvenido al analizador de archivos html.', 10, 10
+		.len: equ $-greeting
+	;; test1 individual tags
 	test1_init: db 'Ejecutando verificación de tags individuales en html...', 10
 		.len: equ $-test1_init
-	error1_test1: db 'Error: falta < antes de > en '
+	error1_test1: db ' Error: falta < antes de > en '
 		.len: equ $-error1_test1
-	error2_test1: db 'Error: falta > después de < en '
+	error2_test1: db ' Error: falta > después de < en '
 		.len: equ $-error2_test1
-	test1_end: db 'La verificación de tags individuales en html ha finalizado.', 10
+	test1_end: db 'La verificación de tags individuales en html ha finalizado.', 10, 10
 		.len: equ $-test1_end
-	;; test2 strings
+	;; test2 double quotes
 	test2_init: db 'Ejecutando verificación de comillas dobles en html...', 10
 		.len: equ $-test2_init
-	error_test2: db 'Error: Ausencia de pareja de comillas en '
+	error_test2: db ' Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test2
-	test2_end: db 'La verificación de comillas dobles en html ha finalizado.', 10
+	test2_end: db 'La verificación de comillas dobles en html ha finalizado.', 10, 10
 		.len: equ $-test2_end
-	;; test3 strings
+	;; test3 simple quotes
 	test3_init: db 'Ejecutando verificación de comillas simples en html...', 10
 		.len: equ $-test3_init
-	error_test3: db 'Error: Ausencia de pareja de comillas en '
+	error_test3: db ' Error: Ausencia de pareja de comillas en '
 		.len equ $-error_test3
-	test3_end: db 'La verificación de comillas simples en html ha finalizado.', 10
+	test3_end: db 'La verificación de comillas simples en html ha finalizado.', 10, 10
 		.len: equ $-test3_end
-
+	;; test4 nested tags
+	test4_init: db 'Ejecutando verificación de tags anidados html...', 10
+		.len: equ $-test4_init
+	error_test4: db ' Error: Tag no anidado en '
+		.len equ $-error_test4
+	test4_end: db 'La verificación de tags anidados en html ha finalizado.', 10, 10
+		.len: equ $-test4_end
+	;; test5 comments
+	test5_init: db 'Ejecutando verificación de comentarios en html...', 10
+		.len: equ $-test5_init
+	error1_test5: db 'Error: falta < antes de > en '
+		.len: equ $-error1_test5
+	error2_test5: db 'Error: comentario mal formado. Falta - después de ! en '
+		.len: equ $-error2_test5
+	error3_test5: db 'Error: comentario mal formado. Falta - después de - en '
+		.len: equ $-error3_test5
+	error4_test5: db 'Error: comentario mal formado. Falta > después de -- en '
+		.len: equ $-error4_test5
+	error5_test5: db 'Error: comentario mal formado. Se encontró < en vez de - en '
+		.len: equ $-error5_test5
+	error6_test5: db 'Error: comentario mal formado. No se encontró --> en '
+		.len: equ $-error6_test5
+	test5_end: db 'La verificación de comentarios en html ha finalizado.', 10, 10
+		.len: equ $-test5_end
+	;; end string
+	end_msg: db 'El análisis del archivo html ha terminado.', 10, 10
+		.len: equ $-end_msg
 ;; **********************************************************************
 ;; section containing non initialized data
 ;; **********************************************************************
@@ -63,6 +92,8 @@ section .data
 section .bss
 	in_file resb MAX_FILE_SZ
 	file_to_parse resb MAX_FILE_SZ
+	open_tag_content resb MAX_FILE_SZ
+	end_tag_content resb MAX_FILE_SZ
 	out_file resb MAX_FILE_SZ
 
 ;; **********************************************************************
@@ -76,13 +107,20 @@ _start:
 		read in_file, MAX_FILE_SZ
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
-	run_test1:
-		call individual_tag_test
-	run_test2:
-		;call complex_quotes_test
-	run_test3:
-		;call simple_quotes_test
-	finish_analyzing:
+	start_tests:
+		write greeting, greeting.len
+		.run_test1:
+			;call individual_tag_test
+		.run_test2:
+			;call double_quotes_test
+		.run_test3:
+			;call single_quotes_test
+		.run_test4:
+			call nested_tag_test
+		.run_test5:
+			;call comment_tag_test
+	end_analyzer:
+		write end_msg, end_msg.len
 		exit
 
 ;; **********************************************************************
@@ -90,7 +128,7 @@ _start:
 ;; **********************************************************************
 
 ;;
-;; get_curr_line: get the current line where r12 buffer index is
+;; get_curr_line: get the current line where r8 buffer index is
 ;;				  r11 will contain the result
 ;;
 
@@ -118,7 +156,7 @@ get_curr_line:
 		jmp .loop
 
 ;;
-;; get_curr_col: get the current column where r12 buffer index is
+;; get_curr_col: get the current column where r8 buffer index is
 ;;               r11 will have the result
 ;;
 
@@ -258,7 +296,7 @@ individual_tag_test:
 ;; complex_quotes_test: verify quotes candidates in html file
 ;;
 
-complex_quotes_test:
+double_quotes_test:
 	;; write init message
 	write test2_init, test2_init.len
 	;; buffer index
@@ -299,7 +337,7 @@ complex_quotes_test:
 			mov r9, 0
 		else
 			;; test the byte on buffer against '-'
-			;; if char < 'a'
+			;; if char < '-'
 			cmp byte [file_to_parse+r8], 45
 			if b
 				;; write error
@@ -337,7 +375,7 @@ complex_quotes_test:
 ;; simple_quotes_test: verify quotes candidates in html file
 ;;
 
-simple_quotes_test:
+single_quotes_test:
 	;; write init message
 	write test3_init, test3_init.len
 	;; buffer index
@@ -378,7 +416,7 @@ simple_quotes_test:
 			mov r9, 0
 		else
 			;; test the byte on buffer against '-'
-			;; if char < 'a'
+			;; if char < '-'
 			cmp byte [file_to_parse+r8], 45
 			if b
 				;; write error
@@ -411,3 +449,294 @@ simple_quotes_test:
 		endif
 		;; keep searching...
 		jmp .loop
+
+;;
+;; nested_tag_test: verify nested tags in html file
+;;
+
+nested_tag_test:
+	;; write init message
+	write test4_init, test4_init.len
+	;; buffer index
+	mov r8, -1
+	;; flag to check_tag_candidate
+	mov r9, 0
+	.loop:
+		;; increment and compare
+		inc r8
+		cmp r8, MAX_FILE_SZ
+		if e
+			;; write end message
+			write test4_end, test4_end.len
+			;; end test
+			ret
+		endif
+		;; goto search_open_tag or check_open_tag
+		cmp r9, 0
+		if e
+			jmp .search_open_tag
+		else
+			jmp .check_open_tag
+		endif
+	.search_open_tag:
+		cmp byte [file_to_parse+r8], '<'
+		if e
+			;; save < index pos in r12
+			mov r12, r8
+			;; move r12 to possible '/', '!', or '?'
+			inc r12
+			;; check r12 index content
+			cmp byte [file_to_parse+r12], '/'
+			if e
+				nop
+			else
+				cmp byte [file_to_parse+r12], '!'
+				if e
+					nop
+				else
+					cmp byte [file_to_parse+r12], '?'
+					if e
+						nop
+					else
+						;; turn on check_open_tag
+						mov r9, 1
+					endif
+				endif
+			endif
+		endif
+		;; keep searching...
+		jmp .loop
+	.check_open_tag:
+		cmp byte [file_to_parse+r8], '<'
+		if e
+			dec r8
+			;; turn off check_open_tag
+			mov r9, 0
+		else
+			cmp byte [file_to_parse+r8], '>'
+			if e
+				clean_buffer open_tag_content
+				mov r13, 0
+				.copy_open_tag:
+					mov dl, byte [file_to_parse+r12]
+					mov byte [open_tag_content+r13], dl
+					inc r12
+					inc r13
+					cmp byte [file_to_parse+r12], '>'
+					jne .copy_open_tag
+					;; compare
+					call aux_nested_tag_test
+			endif
+		endif
+		;; keep searching...
+		jmp .loop
+
+aux_nested_tag_test:
+	;; save register values
+	push r8
+	push r9
+	push r12
+	push r13
+	;; flag to check_tag
+	mov r9, 0
+	.loop:
+		;; increment and compare
+		inc r8
+		cmp r8, MAX_FILE_SZ
+		if e
+			;; restore registers
+			pop r13
+			pop r12
+			pop r9
+			pop r8
+			;; write error
+			write error_test4, error_test4.len
+			call get_curr_line
+			mov rax, r11
+			call write_int
+			write DOTS, 1
+			call get_curr_col
+			mov rax, r11
+			call write_int
+			write NEW_LINE, 1
+			ret
+		endif
+		;; goto search_open_tag or check_open_tag
+		cmp r9, 0
+		if e
+			jmp .search_end_tag
+		else
+			jmp .check_end_tag
+		endif
+	.search_end_tag:
+		cmp byte [file_to_parse+r8], '<'
+		if e
+			;; save < index pos in r12
+			mov r12, r8
+			;; move r12 to possible '/'
+			inc r12
+			;; check r12 index content
+			cmp byte [file_to_parse+r12], '/'
+			if e
+				mov r9, 1
+			endif
+		endif
+		;; keep searching...
+		jmp .loop
+	.check_end_tag:
+		cmp byte [file_to_parse+r8], '<'
+		if e
+			dec r8
+			;; turn on search_end_tag
+			mov r9, 0
+		else
+			cmp byte [file_to_parse+r8], '>'
+			if e
+				clean_buffer end_tag_content
+				inc r12
+				mov r13, 0
+				.copy_end_tag:
+					mov dl, byte [file_to_parse+r12]
+					mov byte [end_tag_content+r13], dl
+					inc r12
+					inc r13
+					cmp byte [file_to_parse+r12], '>'
+					jne .copy_end_tag
+					equal_buffers open_tag_content, end_tag_content, rax
+					cmp rax, 1
+					if e
+						;; restore registers
+						pop r13
+						pop r12
+						pop r9
+						pop r8
+						;; debug
+						;; write NEW_LINE, 1
+						;; write open_tag_content, 20
+						;; write NEW_LINE, 1
+						;; write end_tag_content, 20
+						;; write NEW_LINE, 1
+						;; end proc
+						ret
+					endif
+			endif
+		endif
+		;; keep searching...
+		jmp .loop
+
+;;
+;; comment_tag_test: ignore comment tags
+;;
+
+comment_tag_test:
+	;; write init message
+	write test4_init, test4_init.len
+	;; buffer index
+	mov r8, -1
+	;; flag to check_tag_candidate
+	mov r9, 0
+	.loop:
+		;; increment and compare with file ending
+		inc r8
+		cmp r8, MAX_FILE_SZ
+		if e
+			;; write end message
+			write test5_end, test5_end.len
+			;; end test
+			ret
+		endif
+		;; goto search_tag or check_tag
+		cmp r9, 0
+		if e
+			jmp .search_comment_candidate
+		else
+			jmp .check_comment_candidate
+		endif
+		.search_comment_candidate:
+			cmp byte [file_to_parse+r8], '<'
+			if e
+				cmp byte [file_to_parse+r8+1], '!'
+				if e
+					cmp byte [file_to_parse+r8+2], '-'
+					if e
+						cmp byte [file_to_parse+r8+3], '-'
+						if e
+							add r8, 3
+							;; turn on check_tag_candidate
+							mov r9, 1
+						else
+							;; Error if comment is not well formed
+							write error3_test5, error3_test5.len
+							call get_curr_line
+							mov rax, r11
+							call write_int
+							write DOTS, 1
+							call get_curr_col
+							mov rax, r11
+							call write_int
+							write NEW_LINE, 1
+						endif
+					else
+						cmp byte [file_to_parse+r8+2], 'D'
+						if e
+							add r8, 2
+							jmp .loop
+						else
+							;; Error if comment is not well formed
+							write error2_test5, error2_test5.len
+							call get_curr_line
+							mov rax, r11
+							call write_int
+							write DOTS, 1
+							call get_curr_col
+							mov rax, r11
+							call write_int
+							write NEW_LINE, 1
+						endif
+					endif
+				else
+					jmp .loop
+				endif
+			else
+				;; TODO verificar la parte de doctype
+				cmp byte [file_to_parse+r8], '>'
+				if e
+					jmp .loop
+				endif
+			endif
+			;; keep searching...
+			jmp .loop
+
+		.check_comment_candidate:
+
+			cmp byte [file_to_parse+r8], '-'
+			if e
+				cmp byte [file_to_parse+r8+1], '-'
+				if e
+					cmp byte [file_to_parse+r8+2], '>'
+					if e
+						add r8, 2
+						;; turn off check_tag_candidate
+						mov r9, 0
+					else
+						cmp byte [file_to_parse+r8+2], '<'
+
+						;; write error
+						write error4_test5, error4_test5.len
+						call get_curr_line
+						mov rax, r11
+						call write_int
+						write DOTS, 1
+						call get_curr_col
+						mov rax, r11
+						call write_int
+						write NEW_LINE, 1
+					endif
+				else
+					jmp .loop
+				endif
+			else
+				jmp .loop
+			endif
+			;; keep searching...
+			jmp .loop
