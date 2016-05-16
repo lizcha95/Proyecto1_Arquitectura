@@ -634,7 +634,7 @@ aux_nested_tag_test:
 
 comment_tag_test:
 	;; write init message
-	write test4_init, test4_init.len
+	write test5_init, test5_init.len
 	;; buffer index
 	mov r8, -1
 	;; flag to check_tag_candidate
