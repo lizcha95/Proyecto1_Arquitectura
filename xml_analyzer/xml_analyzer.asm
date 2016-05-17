@@ -7,7 +7,7 @@
 ;; Built with NASM Linux 64 bits
 ;; Copyright 2016 TEC
 ;;
-;; Instructions for run this code:
+;; Instructions for running this code:
 ;; Open Linux terminal
 ;; Locate the code with cd, in my case:
 ;; cd '/media/psf/Home/Proyectos/NASM x64/Proyecto1_Arquitectura/xml_analyzer'
@@ -27,7 +27,7 @@
 
 section .data
 	;; numeric constants
-	MAX_FILE_SZ equ 4000
+	MAX_FILE_SZ equ 19000
 	;; two dots
 	DOTS db ':'
 	;; new line
@@ -85,6 +85,19 @@ section .data
 	;; end string
 	end_msg: db 'El análisis del archivo xml ha terminado.', 10, 10
 		.len: equ $-end_msg
+
+	;; NEW DATA ;;  ;; NEW DATA ;;  ;; NEW DATA ;;  ;; NEW DATA ;;  ;; NEW DATA ;;
+	;; Adding messages for indenting process.
+	start_format_msg: db 'Preparando el archivo para la identación.', 10, 10
+		.len: equ $-start_format_msg
+	format_end_msg: db 'Finalizada preparación de archivo.', 10, 10
+		.len: equ $-format_end_msg
+	start_indent_msg: db 'Identando archivo.', 10, 10
+		.len: equ $-start_indent_msg
+	indent_result_msg: db 10, 'Archivo Final:', 10, 10
+		.len: equ $-indent_result_msg
+	indent_end_msg: db 10, 10, 'Finalizada la identación del archivo.', 10, 10
+		.len: equ $-indent_end_msg
 ;; **********************************************************************
 ;; section containing non initialized data
 ;; **********************************************************************
@@ -96,6 +109,12 @@ section .bss
 	end_tag_content resb MAX_FILE_SZ
 	out_file resb MAX_FILE_SZ
 
+	;; NEW DATA ;;  ;; NEW DATA ;;  ;; NEW DATA ;;  ;; NEW DATA ;;  ;; NEW DATA ;;
+	;; Adding buffers for indenting process.
+	file_delete_blanks resb MAX_FILE_SZ
+	file_to_indent resb MAX_FILE_SZ
+	indented_file resb MAX_FILE_SZ
+
 ;; **********************************************************************
 ;; section containing code
 ;; **********************************************************************
@@ -105,6 +124,8 @@ section .text
 _start:
 	input_file:
 		read in_file, MAX_FILE_SZ
+		;; Saves total char number.
+		mov r14, rax
 		copy_buffer in_file, file_to_parse
 		to_lower file_to_parse
 	start_tests:
@@ -121,7 +142,20 @@ _start:
 			call comment_tag_test
 	end_analyzer:
 		write end_msg, end_msg.len
-		exit
+
+	;; NEW DATA ;; NEW DATA ;; NEW DATA ;; NEW DATA ;; NEW DATA ;;
+	start_indent:
+		write start_format_msg, start_format_msg.len
+		.run_file_format:
+			call format_outfile
+		write format_end_msg, format_end_msg.len
+		write start_indent_msg, start_indent_msg.len
+		.run_file_indent:
+			call indent
+			write indent_result_msg, indent_result_msg.len
+			write indented_file, MAX_FILE_SZ
+		write indent_end_msg, indent_end_msg.len
+	exit
 
 ;; **********************************************************************
 ;; Procedures
@@ -537,6 +571,7 @@ aux_nested_tag_test:
 	push r9
 	push r12
 	push r13
+	push r14
 	;; flag to check_tag
 	mov r9, 0
 	.loop:
@@ -545,6 +580,7 @@ aux_nested_tag_test:
 		cmp r8, MAX_FILE_SZ
 		if ge
 			;; restore registers
+			pop r14
 			pop r13
 			pop r12
 			pop r9
@@ -615,6 +651,7 @@ aux_nested_tag_test:
 							mov r8, MAX_FILE_SZ
 						else
 							;; restore registers
+							pop r14
 							pop r13
 							pop r12
 							pop r9
@@ -744,3 +781,184 @@ comment_tag_test:
 			endif
 			;; keep searching...
 			jmp .loop
+
+;; ******************************************** ;;
+;; 				FILE INDENTATION 				;;
+;; ******************************************** ;;
+
+;; ******************************************** ;;
+;; 				FORMAT OUTFILE 				    ;;
+;; Removes tabs and end of line characters.     ;;
+;; ******************************************** ;;
+
+format_outfile:
+	copy_buffer in_file, file_delete_blanks
+	call format_buffer
+	ret
+
+format_buffer:
+	;; Index for file_delete_blanks.
+	xor r11, r11
+	;; Index for file_to_indent.
+	xor r13, r13
+	;; Start parsing buffer.
+	call parse
+	ret
+
+parse:
+	;; If end of file has been reached, return.
+	cmp r11, r14
+	if e
+		ret
+	endif
+	;; Compares character to carriage return.
+	cmp byte[file_delete_blanks + r11], 10
+	;; If equal, jump to next character.
+	if e
+		jmp next
+	else
+		;; Compares character to tab.
+		cmp byte[file_delete_blanks + r11], '	'
+		;; If equal, jump to next character.
+		if e
+			jmp next
+		;; Else, move character to new buffer.
+		else
+			mov al, [file_delete_blanks + r11]
+			mov [file_to_indent + r13], al
+			inc r13
+		endif
+	endif
+
+;; Move on to next character in original buffer.
+next:
+	inc r11
+	jmp parse
+
+;; ******************************************** ;;
+;; 				INDENT FILE 				    ;;
+;; ******************************************** ;;
+indent:
+	push r11
+	push r12
+	push r13
+	push r15
+	;; R14: Total chars read.
+	;; R11: Index for file_to_indent.
+	xor r11, r11
+	;; R12: Tag count.
+	xor r12, r12
+	;; R13: indented_file index.
+	xor r13, r13
+	call scan
+	pop r15
+	pop r13
+	pop r12
+	pop r11
+	ret
+
+scan:
+	;; Check if end of buffer has been reached.
+	cmp r11, r14
+	if e
+		ret
+	endif
+
+	;; Moves character to new file/buffer.
+	call moveChar
+
+	;; Compares char moved with starting tag.
+	cmp byte[file_to_indent + r11], '<'
+
+	if e
+		;; Found start of tag.
+		;; Saves next position to see if closing tag.
+		lea r15, [r11 + 1]
+
+		;; If this is closing tag, unindent.
+		cmp byte[file_to_indent + r15], '/'
+
+		if e
+			;; Decreases tag count.
+			dec r12
+			;; Adds change of line character before tag.
+			mov byte[indented_file + r13], 10
+			inc r13
+			call add_blank
+			mov byte[indented_file + r13], ' '
+			inc r13
+			mov byte[indented_file + r13], '<'
+		else
+			;; Increases tag count.
+			inc r12
+		endif
+
+		;; Calls procedure to move rest of tag.
+		call moveTag
+
+		;; Calls procedure to add blank spaces.
+		call add_blank
+
+	endif
+
+	;; Increases file indexes.
+	inc r11
+	inc r13
+
+	;; Loops scan.
+	jmp scan
+
+;; Procedure moves chars from file_to_indent to indented_file.
+moveChar:
+	mov al, byte[file_to_indent + r11]
+	mov [indented_file + r13], al
+	ret
+
+;; Procedure used to move entire tag after opening is found.
+moveTag:
+	inc r11
+	inc r13
+	call moveChar
+	cmp byte[file_to_indent + r11], '>'
+	if e
+		inc r13
+		mov byte[indented_file + r13], 10
+		inc r13
+		ret
+	else
+		jmp moveTag
+	endif
+
+;; Procedure to add corresponding blank spaces.
+add_blank:
+	;; First, checks if r12 is 0.
+	cmp r12, 0
+	;; If equal, return.
+	if e
+		ret
+	endif
+	;; Mult. tag count * 3 and keep result in r14.
+	push r14
+	lea r14, [r12 * 2 + r12]
+	;; R10: Used to count blank spaces.
+	xor r10, r10
+
+	.reps:
+		inc r13
+
+		;; Moves blank space to indented file.
+		mov byte[indented_file + r13], ' '
+
+		;; Increases blank space count.
+		inc r10
+
+		;; Compares blank space count to total blank spaces to add.
+		cmp r10, r14
+
+		;; Loops if below.
+		if e
+			pop r14
+			ret
+		else
+			jmp .reps
+		endif
