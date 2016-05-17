@@ -27,7 +27,7 @@
 
 section .data
 	;; numeric constants
-	MAX_FILE_SZ equ 4000
+	MAX_FILE_SZ equ 19000
 	;; two dots
 	DOTS db ':'
 	;; new line
