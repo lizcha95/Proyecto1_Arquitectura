@@ -102,7 +102,6 @@ section .bss
 	file_to_parse resb MAX_FILE_SZ
 	open_tag_content resb MAX_FILE_SZ
 	end_tag_content resb MAX_FILE_SZ
-	head_buff resb 7
 	out_file resb MAX_FILE_SZ
 
 ;; **********************************************************************
@@ -692,7 +691,7 @@ comment_tag_test:
 							write NEW_LINE, 1
 						endif
 					else
-						cmp byte [file_to_parse+r8+2], 'D'
+						cmp byte [file_to_parse+r8+2], 'd'
 						if e
 							add r8, 2
 							jmp .loop
@@ -763,12 +762,15 @@ head_body_test:
 	mov r8, -1
 	;; flag to know if exist </head> before <body>
 	mov r9, 0
+	;; flag to show error
+	mov r10, 0
 	.loop:
 		;; increment and compare with file ending
 		inc r8
 		cmp r8, MAX_FILE_SZ
-		if e
-			cmp r9, 0
+		if ge
+			;; write error
+			cmp r10, 1
 			if e
 				write error_test6, error_test6.len
 			endif
@@ -777,18 +779,56 @@ head_body_test:
 			;; end test
 			ret
 		endif
-	.get_thirteen_chars:
-		clean_buffer head_buff
-		%assign i 0
-		%rep 7
-			mov dl, byte [file_to_parse+r8+i]
-			mov byte [head_buff+i], dl
-		%assign i i+1
-		%endrep
-	.compare:
-		equal_buffers head_buff, head, rax
-		cmp rax, 1
+		;; goto search_end_head, or check_open_body
+		cmp r9, 0
 		if e
-			mov r9, 1
+			jmp .search_end_head
+		else
+			jmp .check_open_body
+		endif
+	.search_end_head:
+		cmp byte [file_to_parse+r8], '<'
+		if e
+			cmp byte [file_to_parse+r8+1], '/'
+			if e
+				cmp byte [file_to_parse+r8+2], 'h'
+				if e
+					cmp byte [file_to_parse+r8+3], 'e'
+					if e
+						cmp byte [file_to_parse+r8+4], 'a'
+						if e
+							cmp byte [file_to_parse+r8+5], 'd'
+							if e
+								cmp byte [file_to_parse+r8+6], '>'
+								if e
+									mov r9, 1
+								endif
+							endif
+						endif
+					endif
+				endif
+			endif
+		endif
+		jmp .loop
+	.check_open_body:
+		cmp byte [file_to_parse+r8], '<'
+		if e
+			cmp byte [file_to_parse+r8+1], 'b'
+			if e
+				cmp byte [file_to_parse+r8+2], 'o'
+				if e
+					cmp byte [file_to_parse+r8+3], 'd'
+					if e
+						cmp byte [file_to_parse+r8+4], 'y'
+						if e
+							cmp byte [file_to_parse+r8+4], '>'
+							if e
+								mov r8, MAX_FILE_SZ
+								mov r10, 1
+							endif
+						endif
+					endif
+				endif
+			endif
 		endif
 		jmp .loop
