@@ -82,6 +82,14 @@ section .data
 		.len: equ $-error6_test5
 	test5_end: db 'La verificación de comentarios en html ha finalizado.', 10, 10
 		.len: equ $-test5_end
+	;; test6 html format
+	test6_init: db 'Verificación de que el html esté bien formado...', 10
+		.len: equ $-test6_init
+	head_body: db '</head><body>'
+	error_test6: db ' Error: No se encontró body después de head.', 10
+		.len: equ $-error_test6
+	test6_end: db 'Verificación finalizada.', 10, 10
+		.len: equ $-test6_end
 	;; end string
 	end_msg: db 'El análisis del archivo html ha terminado.', 10, 10
 		.len: equ $-end_msg
@@ -94,6 +102,7 @@ section .bss
 	file_to_parse resb MAX_FILE_SZ
 	open_tag_content resb MAX_FILE_SZ
 	end_tag_content resb MAX_FILE_SZ
+	head_body_buff resb 15
 	out_file resb MAX_FILE_SZ
 
 ;; **********************************************************************
@@ -120,7 +129,7 @@ _start:
 		.run_test5:
 			;call comment_tag_test
 		.run_test6:
-			;call head_body_test
+			call head_body_test
 	end_analyzer:
 		write end_msg, end_msg.len
 		exit
@@ -651,7 +660,7 @@ comment_tag_test:
 			;; end test
 			ret
 		endif
-		;; goto search_tag or check_tag
+		;; goto search_comment_candidate or check_comment_candidate
 		cmp r9, 0
 		if e
 			jmp .search_comment_candidate
@@ -748,3 +757,19 @@ comment_tag_test:
 			jmp .loop
 
 head_body_test:
+	;; write init message
+	write test6_init, test6_init.len
+	;; buffer index
+	mov r8, -1
+	;; flag to know if exist </head> before <body>
+	mov r9, 0
+	.loop:
+		;; increment and compare with file ending
+		inc r8
+		cmp r8, MAX_FILE_SZ
+		if e
+			;; write end message
+			write test6_end, test6_end.len
+			;; end test
+			ret
+		endif

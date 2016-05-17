@@ -12,7 +12,7 @@ ASM_F=-f elf64
 LINKER=ld
 #link executable
 html_analyzer: html_analyzer.o
-	$(LINKER) -o html_analyzer html_analyzer.o
+	@$(LINKER) -o html_analyzer html_analyzer.o
 #assemble source code
 html_analyzer.o: html_analyzer.asm
-	$(ASM) $(ASM_F) -o html_analyzer.o html_analyzer.asm
+	@$(ASM) $(ASM_F) -o html_analyzer.o html_analyzer.asm
