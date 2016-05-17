@@ -118,7 +118,7 @@ _start:
 		.run_test4:
 			call nested_tag_test
 		.run_test5:
-			;call comment_tag_test
+			call comment_tag_test
 	end_analyzer:
 		write end_msg, end_msg.len
 		exit
