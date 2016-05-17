@@ -681,7 +681,7 @@ comment_tag_test:
 							write NEW_LINE, 1
 						endif
 					else
-						cmp byte [file_to_parse+r8+2], 'D'
+						cmp byte [file_to_parse+r8+2], 'd'
 						if e
 							add r8, 2
 							jmp .loop
