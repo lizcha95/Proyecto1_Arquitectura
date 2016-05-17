@@ -85,7 +85,6 @@ section .data
 	;; test6 html format
 	test6_init: db 'Verificación de que el html esté bien formado...', 10
 		.len: equ $-test6_init
-	head: db '</head>'
 	error_test6: db ' Error: No se encontró tag body después de tag head.', 10
 		.len: equ $-error_test6
 	test6_end: db 'Verificación finalizada.', 10, 10
@@ -798,82 +797,82 @@ comment_tag_test:
 			jmp .loop
 
 head_body_test:
-;; write init message
-write test6_init, test6_init.len
-;; buffer index
-mov r8, -1
-;; flag to know if exist </head> before <body>
-mov r9, 0
-;; flag to show error
-mov r10, 0
-.loop:
-	;; increment and compare with file ending
-	inc r8
-	cmp r8, MAX_FILE_SZ
-	if ge
-		;; write error
-		cmp r10, 1
-		if e
-			write error_test6, error_test6.len
-		endif
-		;; write end message
-		write test6_end, test6_end.len
-		;; end test
-		ret
-	endif
-	;; goto search_end_head, or check_open_body
-	cmp r9, 0
-	if e
-		jmp .search_end_head
-	else
-		jmp .check_open_body
-	endif
-.search_end_head:
-	cmp byte [file_to_parse+r8], '<'
-	if e
-		cmp byte [file_to_parse+r8+1], '/'
-		if e
-			cmp byte [file_to_parse+r8+2], 'h'
+	;; write init message
+	write test6_init, test6_init.len
+	;; buffer index
+	mov r8, -1
+	;; flag to know if exist </head> before <body>
+	mov r9, 0
+	;; flag to show error
+	mov r10, 0
+	.loop:
+		;; increment and compare with file ending
+		inc r8
+		cmp r8, MAX_FILE_SZ
+		if ge
+			;; write error
+			cmp r10, 1
 			if e
-				cmp byte [file_to_parse+r8+3], 'e'
+				write error_test6, error_test6.len
+			endif
+			;; write end message
+			write test6_end, test6_end.len
+			;; end test
+			ret
+		endif
+		;; goto search_end_head, or check_open_body
+		cmp r9, 0
+		if e
+			jmp .search_end_head
+		else
+			jmp .check_open_body
+		endif
+	.search_end_head:
+		cmp byte [file_to_parse+r8], '<'
+		if e
+			cmp byte [file_to_parse+r8+1], '/'
+			if e
+				cmp byte [file_to_parse+r8+2], 'h'
 				if e
-					cmp byte [file_to_parse+r8+4], 'a'
+					cmp byte [file_to_parse+r8+3], 'e'
 					if e
-						cmp byte [file_to_parse+r8+5], 'd'
+						cmp byte [file_to_parse+r8+4], 'a'
 						if e
-							cmp byte [file_to_parse+r8+6], '>'
+							cmp byte [file_to_parse+r8+5], 'd'
 							if e
-								mov r9, 1
+								cmp byte [file_to_parse+r8+6], '>'
+								if e
+									mov r9, 1
+								endif
 							endif
 						endif
 					endif
 				endif
 			endif
 		endif
-	endif
-	jmp .loop
-.check_open_body:
-	cmp byte [file_to_parse+r8], '<'
-	if e
-		cmp byte [file_to_parse+r8+1], 'b'
+		jmp .loop
+	.check_open_body:
+		cmp byte [file_to_parse+r8], '<'
 		if e
-			cmp byte [file_to_parse+r8+2], 'o'
+			cmp byte [file_to_parse+r8+1], 'b'
 			if e
-				cmp byte [file_to_parse+r8+3], 'd'
+				cmp byte [file_to_parse+r8+2], 'o'
 				if e
-					cmp byte [file_to_parse+r8+4], 'y'
+					cmp byte [file_to_parse+r8+3], 'd'
 					if e
-						cmp byte [file_to_parse+r8+4], '>'
+						cmp byte [file_to_parse+r8+4], 'y'
 						if e
-							mov r8, MAX_FILE_SZ
-							mov r10, 1
+							cmp byte [file_to_parse+r8+4], '>'
+							if e
+								mov r8, MAX_FILE_SZ
+								mov r10, 1
+							endif
 						endif
 					endif
 				endif
 			endif
 		endif
-	endif
-	jmp .loop
+		jmp .loop
 
 ;; ******************************************** ;;
 ;; 				FILE INDENTATION 				;;
