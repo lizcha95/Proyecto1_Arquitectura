@@ -68,25 +68,25 @@ section .data
 	;; test5 comments
 	test5_init: db 'Ejecutando verificación de comentarios en html...', 10
 		.len: equ $-test5_init
-	error1_test5: db 'Error: falta < antes de > en '
+	error1_test5: db ' Error: falta < antes de > en '
 		.len: equ $-error1_test5
-	error2_test5: db 'Error: comentario mal formado. Falta - después de ! en '
+	error2_test5: db ' Error: comentario mal formado. Falta - después de ! en '
 		.len: equ $-error2_test5
-	error3_test5: db 'Error: comentario mal formado. Falta - después de - en '
+	error3_test5: db ' Error: comentario mal formado. Falta - después de - en '
 		.len: equ $-error3_test5
-	error4_test5: db 'Error: comentario mal formado. Falta > después de -- en '
+	error4_test5: db ' Error: comentario mal formado. Falta > después de -- en '
 		.len: equ $-error4_test5
-	error5_test5: db 'Error: comentario mal formado. Se encontró < en vez de - en '
+	error5_test5: db ' Error: comentario mal formado. Se encontró < en vez de - en '
 		.len: equ $-error5_test5
-	error6_test5: db 'Error: comentario mal formado. No se encontró --> en '
+	error6_test5: db ' Error: comentario mal formado. No se encontró --> en '
 		.len: equ $-error6_test5
 	test5_end: db 'La verificación de comentarios en html ha finalizado.', 10, 10
 		.len: equ $-test5_end
 	;; test6 html format
 	test6_init: db 'Verificación de que el html esté bien formado...', 10
 		.len: equ $-test6_init
-	head_body: db '</head><body>'
-	error_test6: db ' Error: No se encontró body después de head.', 10
+	head: db '</head>'
+	error_test6: db ' Error: No se encontró tag body después de tag head.', 10
 		.len: equ $-error_test6
 	test6_end: db 'Verificación finalizada.', 10, 10
 		.len: equ $-test6_end
@@ -102,7 +102,7 @@ section .bss
 	file_to_parse resb MAX_FILE_SZ
 	open_tag_content resb MAX_FILE_SZ
 	end_tag_content resb MAX_FILE_SZ
-	head_body_buff resb 15
+	head_buff resb 7
 	out_file resb MAX_FILE_SZ
 
 ;; **********************************************************************
@@ -768,8 +768,27 @@ head_body_test:
 		inc r8
 		cmp r8, MAX_FILE_SZ
 		if e
+			cmp r9, 0
+			if e
+				write error_test6, error_test6.len
+			endif
 			;; write end message
 			write test6_end, test6_end.len
 			;; end test
 			ret
 		endif
+	.get_thirteen_chars:
+		clean_buffer head_buff
+		%assign i 0
+		%rep 7
+			mov dl, byte [file_to_parse+r8+i]
+			mov byte [head_buff+i], dl
+		%assign i i+1
+		%endrep
+	.compare:
+		equal_buffers head_buff, head, rax
+		cmp rax, 1
+		if e
+			mov r9, 1
+		endif
+		jmp .loop
